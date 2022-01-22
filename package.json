@@ -1,0 +1,59 @@
+{
+  "name": "bubblyclouds-auth",
+  "version": "1.0.0",
+  "description": "Powering all things auth for Bubbly Clouds projects",
+  "homepage": "https://auth.bubblyclouds.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamesacres/bubblyclouds-auth.git"
+  },
+  "author": "James Acres",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jamesacres/bubblyclouds-auth/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": "v14"
+  },
+  "lint-staged": {
+    "*.ts": "eslint --cache --fix"
+  },
+  "scripts": {
+    "build": "webpack --mode=production --node-env=production",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "lint": "eslint --cache --fix",
+    "prepare": "husky install",
+    "build:dev": "webpack --mode=development",
+    "build:prod": "webpack --mode=production --node-env=production",
+    "watch": "webpack --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.10",
+    "@types/webpack": "^5.28.0",
+    "@typescript-eslint/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^5.10.0",
+    "@webpack-cli/generators": "^2.4.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^10.2.1",
+    "dotenv-webpack": "^7.0.3",
+    "eslint": "^8.7.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^7.0.0",
+    "lint-staged": "^12.2.2",
+    "nodemon-webpack-plugin": "^4.7.0",
+    "prettier": "^2.5.1",
+    "terser-webpack-plugin": "^5.3.0",
+    "ts-loader": "^9.2.6",
+    "tsconfig-paths-webpack-plugin": "^3.5.2",
+    "typescript": "^4.5.5",
+    "webpack": "^5.67.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-node-externals": "^3.0.0"
+  }
+}
