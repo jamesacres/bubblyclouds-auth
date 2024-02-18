@@ -1,16 +1,18 @@
-// import * as cdk from 'aws-cdk-lib';
-// import { Template } from 'aws-cdk-lib/assertions';
-// import * as Deploy from '../lib/deploy-stack';
+import { App } from 'aws-cdk-lib';
+import { AuthStack } from '../lib/auth-stack';
+import { Template } from 'aws-cdk-lib/assertions';
 
-// example test. To run these tests, uncomment this file along with the
-// example resource in lib/deploy-stack.ts
 test('SQS Queue Created', () => {
-  //   const app = new cdk.App();
-  //     // WHEN
-  //   const stack = new Deploy.DeployStack(app, 'MyTestStack');
-  //     // THEN
-  //   const template = Template.fromStack(stack);
-  //   template.hasResourceProperties('AWS::SQS::Queue', {
-  //     VisibilityTimeout: 300
-  //   });
+  const app = new App();
+  const authStack = new AuthStack(app, 'AuthStack', {
+    env: {
+      account: '12345678',
+      region: 'eu-west-2',
+    },
+    certificateArn: 'mockCertificateArn',
+    domainName: 'mockdomain.test',
+    subdomain: 'mocksubdomain',
+  });
+  const template = Template.fromStack(authStack);
+  expect(template.toJSON()).toMatchSnapshot();
 });
