@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Auth Service for Bubbly Clouds",
   "scripts": {
+    "start": "sam local start-api -t ./deploy/cdk.out/AuthStack.template.json",
     "test": "jest"
   },
   "author": "James Acres",
