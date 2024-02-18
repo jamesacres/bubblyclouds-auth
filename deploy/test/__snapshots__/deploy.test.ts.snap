@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SQS Queue Created 1`] = `
+exports[`Auth Stack 1`] = `
 {
   "Outputs": {
     "AuthGatewayEndpoint49671CC4": {

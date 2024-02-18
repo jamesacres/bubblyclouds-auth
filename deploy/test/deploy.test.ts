@@ -2,7 +2,7 @@ import { App } from 'aws-cdk-lib';
 import { AuthStack } from '../lib/auth-stack';
 import { Template } from 'aws-cdk-lib/assertions';
 
-test('SQS Queue Created', () => {
+test('Auth Stack', () => {
   const app = new App();
   const authStack = new AuthStack(app, 'AuthStack', {
     env: {
