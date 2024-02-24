@@ -62,8 +62,9 @@ export class AuthStack extends Stack {
     });
 
     const oidcResource = authGateway.root.addResource('oidc');
+    const jwksResource = oidcResource.addResource('jwks');
 
     const oidcLambdaIntegration = new LambdaIntegration(oidcFn);
-    oidcResource.addMethod('GET', oidcLambdaIntegration);
+    jwksResource.addMethod('GET', oidcLambdaIntegration);
   }
 }

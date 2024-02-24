@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
+    "cdk:synth": "cdk synth",
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
   },

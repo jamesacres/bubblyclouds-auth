@@ -121,9 +121,10 @@ exports[`Auth Stack 1`] = `
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
     },
-    "AuthGatewayDeploymentE35D8D60780d3829d041bb7166e4097bcfeed7bd": {
+    "AuthGatewayDeploymentE35D8D60190cd746ac9be2e34f52b2dbdd2bb248": {
       "DependsOn": [
-        "AuthGatewayoidcGETDE5F9E2F",
+        "AuthGatewayoidcjwksGET292275E4",
+        "AuthGatewayoidcjwks1D2219B3",
         "AuthGatewayoidc8A96E077",
       ],
       "Properties": {
@@ -140,7 +141,7 @@ exports[`Auth Stack 1`] = `
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "AuthGatewayDeploymentE35D8D60780d3829d041bb7166e4097bcfeed7bd",
+          "Ref": "AuthGatewayDeploymentE35D8D60190cd746ac9be2e34f52b2dbdd2bb248",
         },
         "MethodSettings": [
           {
@@ -174,69 +175,19 @@ exports[`Auth Stack 1`] = `
       },
       "Type": "AWS::ApiGateway::Resource",
     },
-    "AuthGatewayoidcGETApiPermissionAuthStackAuthGateway1EA58262GEToidcC4F2019F": {
+    "AuthGatewayoidcjwks1D2219B3": {
       "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "AuthOidcFunctionFEAD1639",
-            "Arn",
-          ],
+        "ParentId": {
+          "Ref": "AuthGatewayoidc8A96E077",
         },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":execute-api:eu-west-2:12345678:",
-              {
-                "Ref": "AuthGateway83D5F26D",
-              },
-              "/",
-              {
-                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
-              },
-              "/GET/oidc",
-            ],
-          ],
+        "PathPart": "jwks",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
         },
       },
-      "Type": "AWS::Lambda::Permission",
+      "Type": "AWS::ApiGateway::Resource",
     },
-    "AuthGatewayoidcGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidc009D1884": {
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "AuthOidcFunctionFEAD1639",
-            "Arn",
-          ],
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":execute-api:eu-west-2:12345678:",
-              {
-                "Ref": "AuthGateway83D5F26D",
-              },
-              "/test-invoke-stage/GET/oidc",
-            ],
-          ],
-        },
-      },
-      "Type": "AWS::Lambda::Permission",
-    },
-    "AuthGatewayoidcGETDE5F9E2F": {
+    "AuthGatewayoidcjwksGET292275E4": {
       "Properties": {
         "AuthorizationType": "NONE",
         "HttpMethod": "GET",
@@ -264,13 +215,75 @@ exports[`Auth Stack 1`] = `
           },
         },
         "ResourceId": {
-          "Ref": "AuthGatewayoidc8A96E077",
+          "Ref": "AuthGatewayoidcjwks1D2219B3",
         },
         "RestApiId": {
           "Ref": "AuthGateway83D5F26D",
         },
       },
       "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcjwksGETApiPermissionAuthStackAuthGateway1EA58262GEToidcjwksC56636DA": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc/jwks",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcjwksGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidcjwksE9258CCF": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc/jwks",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
     },
     "AuthOidcFunctionFEAD1639": {
       "DependsOn": [
@@ -279,7 +292,7 @@ exports[`Auth Stack 1`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-12345678-eu-west-2",
-          "S3Key": "a329291cf95cfd2c2842b319b32eb6f2c37d1e14e6d9096799be529ba1805304.zip",
+          "S3Key": "a2d608fec27c5a43bf6fc9eb408c849b77d002f0b7d413ca3c0cc61187149ae6.zip",
         },
         "Environment": {
           "Variables": {

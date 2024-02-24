@@ -1,13 +1,15 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import serverless from 'serverless-http';
+import { initProvider } from '../lib/oidc';
+
+const provider = initProvider();
+const koaApp = provider.app;
+const serverlessHandler = serverless(koaApp, { basePath: '/oidc' });
 
 export const handler: APIGatewayProxyHandler = async (event, context) => {
-  context.callbackWaitsForEmptyEventLoop = false;
-  const payload = JSON.parse(event.body ?? '{}');
-  console.info(payload);
-  const response = {};
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'text/json' },
-    body: JSON.stringify(response),
-  };
+  const result = (await serverlessHandler(
+    event,
+    context
+  )) as APIGatewayProxyResult;
+  return result;
 };
