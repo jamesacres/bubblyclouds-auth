@@ -14,6 +14,7 @@ import {
   NodejsFunctionProps,
 } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -34,6 +35,7 @@ export class AuthStack extends Stack {
       domainName,
       subdomain,
     });
+    this.secrets();
 
     const { oidc, redirect } = this.lambdaIntegrations();
 
@@ -83,6 +85,12 @@ export class AuthStack extends Stack {
       endpointType: EndpointType.EDGE,
     });
     domain.addBasePathMapping(authGateway);
+  }
+
+  private secrets() {
+    ['sigRSA'].forEach((secretName) => {
+      new Secret(this, secretName, { secretName });
+    });
   }
 
   private lambdaIntegrations() {

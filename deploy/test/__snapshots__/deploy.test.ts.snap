@@ -727,6 +727,15 @@ exports[`Auth Stack 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "sigRSA5AF93E59": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {},
+        "Name": "sigRSA",
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
   },
   "Rules": {
     "CheckBootstrapVersion": {
