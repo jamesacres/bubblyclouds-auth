@@ -5,4 +5,4 @@ function exportJwk({ privateKey }) {
 }
 
 const keys = await Promise.all([generateKeyPair('RS256').then(exportJwk)]);
-console.info(keys);
+console.info(JSON.stringify(keys));
