@@ -35,17 +35,19 @@ export class AuthStack extends Stack {
       domainName,
       subdomain,
     });
-    this.secrets();
 
-    const { oidc, redirect } = this.lambdaIntegrations();
+    const { oidc, redirect } = this.lambdas();
 
-    authGateway.root.addMethod('GET', redirect);
+    const { sigRSA } = this.secrets();
+    sigRSA.grantRead(oidc.fn);
+
+    authGateway.root.addMethod('GET', redirect.integration);
 
     const oidcResource = authGateway.root.addResource('oidc');
-    oidcResource.addMethod('GET', redirect);
+    oidcResource.addMethod('GET', redirect.integration);
 
     const jwksResource = oidcResource.addResource('jwks');
-    jwksResource.addMethod('GET', oidc);
+    jwksResource.addMethod('GET', oidc.integration);
   }
 
   private gateway() {
@@ -88,12 +90,12 @@ export class AuthStack extends Stack {
   }
 
   private secrets() {
-    ['sigRSA'].forEach((secretName) => {
-      new Secret(this, secretName, { secretName });
-    });
+    return {
+      sigRSA: new Secret(this, 'sigRSA', { secretName: 'sigRSA' }),
+    };
   }
 
-  private lambdaIntegrations() {
+  private lambdas() {
     const config: NodejsFunctionProps = {
       handler: 'handler',
       memorySize: 128,
@@ -117,8 +119,11 @@ export class AuthStack extends Stack {
     });
 
     return {
-      redirect: new LambdaIntegration(redirectFn),
-      oidc: new LambdaIntegration(oidcFn),
+      redirect: {
+        fn: redirectFn,
+        integration: new LambdaIntegration(redirectFn),
+      },
+      oidc: { fn: oidcFn, integration: new LambdaIntegration(oidcFn) },
     };
   }
 }

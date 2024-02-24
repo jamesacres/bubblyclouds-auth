@@ -488,6 +488,7 @@ exports[`Auth Stack 1`] = `
     },
     "AuthOidcFunctionFEAD1639": {
       "DependsOn": [
+        "AuthOidcFunctionServiceRoleDefaultPolicyF12F3B50",
         "AuthOidcFunctionServiceRole7F4533CF",
       ],
       "Properties": {
@@ -567,6 +568,32 @@ exports[`Auth Stack 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "AuthOidcFunctionServiceRoleDefaultPolicyF12F3B50": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "sigRSA5AF93E59",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AuthOidcFunctionServiceRoleDefaultPolicyF12F3B50",
+        "Roles": [
+          {
+            "Ref": "AuthOidcFunctionServiceRole7F4533CF",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "AuthRedirectFunctionC0CFE165": {
       "DependsOn": [
