@@ -493,7 +493,7 @@ exports[`Auth Stack 1`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-12345678-eu-west-2",
-          "S3Key": "4ee3983432ed756b8e942b88dff043f3547cd696d5a111c2284bb4ed9d15a54d.zip",
+          "S3Key": "c30676f6c36d858db67120f0fdd957ce3fcbb17e2337414e732a59c504fe879c.zip",
         },
         "Environment": {
           "Variables": {
