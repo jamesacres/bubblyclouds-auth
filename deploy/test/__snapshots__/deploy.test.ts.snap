@@ -121,8 +121,10 @@ exports[`Auth Stack 1`] = `
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
     },
-    "AuthGatewayDeploymentE35D8D60190cd746ac9be2e34f52b2dbdd2bb248": {
+    "AuthGatewayDeploymentE35D8D607affae14d0a5dd980daf2f28db8ba7e5": {
       "DependsOn": [
+        "AuthGatewayGET8FB7D431",
+        "AuthGatewayoidcGETDE5F9E2F",
         "AuthGatewayoidcjwksGET292275E4",
         "AuthGatewayoidcjwks1D2219B3",
         "AuthGatewayoidc8A96E077",
@@ -141,7 +143,7 @@ exports[`Auth Stack 1`] = `
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "AuthGatewayDeploymentE35D8D60190cd746ac9be2e34f52b2dbdd2bb248",
+          "Ref": "AuthGatewayDeploymentE35D8D607affae14d0a5dd980daf2f28db8ba7e5",
         },
         "MethodSettings": [
           {
@@ -160,6 +162,107 @@ exports[`Auth Stack 1`] = `
       },
       "Type": "AWS::ApiGateway::Stage",
     },
+    "AuthGatewayGET8FB7D431": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthRedirectFunctionC0CFE165",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "AuthGateway83D5F26D",
+            "RootResourceId",
+          ],
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayGETApiPermissionAuthStackAuthGateway1EA58262GET4EBF36B9": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthRedirectFunctionC0CFE165",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayGETApiPermissionTestAuthStackAuthGateway1EA58262GET5421246C": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthRedirectFunctionC0CFE165",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
     "AuthGatewayoidc8A96E077": {
       "Properties": {
         "ParentId": {
@@ -174,6 +277,104 @@ exports[`Auth Stack 1`] = `
         },
       },
       "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcGETApiPermissionAuthStackAuthGateway1EA58262GEToidcC4F2019F": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthRedirectFunctionC0CFE165",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidc009D1884": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthRedirectFunctionC0CFE165",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcGETDE5F9E2F": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthRedirectFunctionC0CFE165",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidc8A96E077",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
     },
     "AuthGatewayoidcjwks1D2219B3": {
       "Properties": {
@@ -292,7 +493,7 @@ exports[`Auth Stack 1`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-12345678-eu-west-2",
-          "S3Key": "a2d608fec27c5a43bf6fc9eb408c849b77d002f0b7d413ca3c0cc61187149ae6.zip",
+          "S3Key": "4ee3983432ed756b8e942b88dff043f3547cd696d5a111c2284bb4ed9d15a54d.zip",
         },
         "Environment": {
           "Variables": {
@@ -337,6 +538,88 @@ exports[`Auth Stack 1`] = `
       "Type": "Custom::LogRetention",
     },
     "AuthOidcFunctionServiceRole7F4533CF": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AuthRedirectFunctionC0CFE165": {
+      "DependsOn": [
+        "AuthRedirectFunctionServiceRoleF183DD8A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-12345678-eu-west-2",
+          "S3Key": "6bdafcbd7384ddb89eccd0ab57ca080f49c2da532347197fbb9dda3407ad1bb6.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+          },
+        },
+        "FunctionName": "AuthRedirect",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "AuthRedirectFunctionServiceRoleF183DD8A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 15,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AuthRedirectFunctionLogRetentionAD6D60D0": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "AuthRedirectFunctionC0CFE165",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "AuthRedirectFunctionServiceRoleF183DD8A": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [

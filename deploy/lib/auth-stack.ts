@@ -9,7 +9,10 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import {
+  NodejsFunction,
+  NodejsFunctionProps,
+} from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -23,14 +26,28 @@ export interface AuthStackProps extends StackProps {
 export class AuthStack extends Stack {
   constructor(scope: Construct, id: string, props: AuthStackProps) {
     super(scope, id, props);
+    const { certificateArn, domainName, subdomain } = props;
 
-    const certificate = Certificate.fromCertificateArn(
-      this,
-      'Certificate',
-      props.certificateArn
-    );
+    const authGateway = this.gateway();
+    this.domain(authGateway, {
+      certificateArn,
+      domainName,
+      subdomain,
+    });
 
-    const authGateway = new RestApi(this, 'AuthGateway', {
+    const { oidc, redirect } = this.lambdaIntegrations();
+
+    authGateway.root.addMethod('GET', redirect);
+
+    const oidcResource = authGateway.root.addResource('oidc');
+    oidcResource.addMethod('GET', redirect);
+
+    const jwksResource = oidcResource.addResource('jwks');
+    jwksResource.addMethod('GET', oidc);
+  }
+
+  private gateway() {
+    return new RestApi(this, 'AuthGateway', {
       restApiName: 'AuthGateway',
       deployOptions: {
         metricsEnabled: true,
@@ -40,18 +57,36 @@ export class AuthStack extends Stack {
       cloudWatchRole: true,
       endpointTypes: [EndpointType.EDGE],
     });
+  }
 
+  private domain(
+    authGateway: RestApi,
+    {
+      certificateArn,
+      domainName,
+      subdomain,
+    }: {
+      certificateArn: string;
+      domainName: string;
+      subdomain: string;
+    }
+  ) {
+    const certificate = Certificate.fromCertificateArn(
+      this,
+      'Certificate',
+      certificateArn
+    );
     const domain = new DomainName(this, 'AuthDomain', {
       certificate,
-      domainName: `${props.subdomain}.${props.domainName}`,
+      domainName: `${subdomain}.${domainName}`,
       securityPolicy: SecurityPolicy.TLS_1_2,
       endpointType: EndpointType.EDGE,
     });
     domain.addBasePathMapping(authGateway);
+  }
 
-    const oidcFn = new NodejsFunction(this, `AuthOidcFunction`, {
-      entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
-      functionName: `AuthOidc`,
+  private lambdaIntegrations() {
+    const config: NodejsFunctionProps = {
       handler: 'handler',
       memorySize: 128,
       environment: {},
@@ -59,12 +94,23 @@ export class AuthStack extends Stack {
       timeout: Duration.seconds(15),
       bundling: {},
       logRetention: RetentionDays.ONE_WEEK,
+    };
+
+    const redirectFn = new NodejsFunction(this, `AuthRedirectFunction`, {
+      ...config,
+      entry: path.resolve(__dirname, '../../src/handlers/redirect.ts'),
+      functionName: `AuthRedirect`,
     });
 
-    const oidcResource = authGateway.root.addResource('oidc');
-    const jwksResource = oidcResource.addResource('jwks');
+    const oidcFn = new NodejsFunction(this, `AuthOidcFunction`, {
+      ...config,
+      entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
+      functionName: `AuthOidc`,
+    });
 
-    const oidcLambdaIntegration = new LambdaIntegration(oidcFn);
-    jwksResource.addMethod('GET', oidcLambdaIntegration);
+    return {
+      redirect: new LambdaIntegration(redirectFn),
+      oidc: new LambdaIntegration(oidcFn),
+    };
   }
 }
