@@ -1,6 +1,10 @@
-import Provider, { Configuration } from 'oidc-provider';
+import Provider, { Configuration, JWK } from 'oidc-provider';
 
-const initProvider = () => {
+export interface OidcOptions {
+  keys: JWK[];
+}
+
+const initProvider = ({ keys }: OidcOptions) => {
   const configuration: Configuration = {
     clients: [
       {
@@ -9,6 +13,7 @@ const initProvider = () => {
         redirect_uris: ['http://lvh.me:8080/cb'],
       },
     ],
+    jwks: { keys },
   };
 
   const provider = new Provider('http://localhost:3000', configuration);
