@@ -59,7 +59,7 @@ export const oidcInteraction = (provider: Provider) => {
     const { uid, prompt } = await provider.interactionDetails(ctx.req, ctx.res);
     if (prompt.name === 'login') {
       // Caller will indicate which to login with, for now default to Google
-      return ctx.redirect(`/interaction/${uid}/federated/google`);
+      return ctx.redirect(`/oidc/interaction/${uid}/federated/google`);
     } else if (prompt.name === 'consent') {
       throw Error('consent view not implemented');
     }

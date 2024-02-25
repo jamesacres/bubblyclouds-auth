@@ -181,7 +181,7 @@ export class AuthStack extends Stack {
       functionName: `AuthOidc`,
       environment: {
         DEBUG: 'oidc-provider:*',
-        OAUTH_TABLE: 'bubblyclouds-auth-dynamodb',
+        OAUTH_TABLE: 'AuthStack-AuthTable0711E62F-15KG9EHHEGFYW',
       },
     });
 
