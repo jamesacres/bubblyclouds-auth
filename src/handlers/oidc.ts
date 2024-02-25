@@ -10,7 +10,7 @@ const oidcOptions = async (): Promise<OidcOptions> => {
   return { keys };
 };
 
-let serverlessHandler;
+let serverlessHandler: serverless.Handler;
 const initServerlessHandler = async (): Promise<serverless.Handler> => {
   if (!serverlessHandler) {
     const provider = initProvider(await oidcOptions());
@@ -22,6 +22,5 @@ const initServerlessHandler = async (): Promise<serverless.Handler> => {
 
 export const handler: Handler = async (event, context) => {
   const serverlessHandler = await initServerlessHandler();
-  const result = await serverlessHandler(event, context);
-  return result;
+  return serverlessHandler(event, context);
 };

@@ -1,3 +1,4 @@
+import helmet from 'koa-helmet';
 import Provider, { Configuration, JWK } from 'oidc-provider';
 
 export interface OidcOptions {
@@ -17,6 +18,8 @@ const initProvider = ({ keys }: OidcOptions) => {
   };
 
   const provider = new Provider('http://localhost:3000', configuration);
+
+  provider.use(helmet());
 
   provider.use(async (ctx, next) => {
     console.log('pre middleware', ctx.method, ctx.path);
