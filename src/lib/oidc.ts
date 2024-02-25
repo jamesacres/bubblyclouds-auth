@@ -8,6 +8,7 @@ import Provider, {
 import { oidcInteraction } from '../routes/oidcInteraction';
 import { Account } from '../models/account';
 import { constants } from 'http2';
+import { DynamoDBAdapter } from '../adapters/dynamodb';
 
 export interface OidcOptions {
   keys: JWK[];
@@ -16,6 +17,7 @@ export interface OidcOptions {
 const initProvider = ({ keys }: OidcOptions) => {
   console.info('initProvider');
   const configuration: Configuration = {
+    adapter: DynamoDBAdapter,
     clients: [
       {
         access_token_ttl: 28800,

@@ -134,6 +134,9 @@ export class DynamoDBAdapter implements Adapter {
     const result = await backOff(getResult, {
       jitter: 'full',
       numOfAttempts: MAX_RETRIES,
+    }).catch((e) => {
+      console.error(e);
+      return undefined;
     });
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
@@ -171,6 +174,9 @@ export class DynamoDBAdapter implements Adapter {
     const result = await backOff(getResult, {
       jitter: 'full',
       numOfAttempts: MAX_RETRIES,
+    }).catch((e) => {
+      console.error(e);
+      return undefined;
     });
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
@@ -208,6 +214,9 @@ export class DynamoDBAdapter implements Adapter {
     const result = await backOff(getResult, {
       jitter: 'full',
       numOfAttempts: MAX_RETRIES,
+    }).catch((e) => {
+      console.error(e);
+      return undefined;
     });
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required

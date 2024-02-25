@@ -8,6 +8,7 @@ import {
   SecurityPolicy,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { AttributeType, ProjectionType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import {
   NodejsFunction,
@@ -40,6 +41,9 @@ export class AuthStack extends Stack {
 
     const { sigRSA } = this.secrets();
     sigRSA.grantRead(oidc.fn);
+
+    const { table } = this.dynamodb();
+    table.grantReadWriteData(oidc.fn);
 
     // GET /
     authGateway.root.addMethod('GET', redirect.integration);
@@ -134,6 +138,26 @@ export class AuthStack extends Stack {
     };
   }
 
+  private dynamodb() {
+    const table = new Table(this, 'AuthTable', {
+      partitionKey: { name: 'modelId', type: AttributeType.STRING },
+      pointInTimeRecovery: true,
+      timeToLiveAttribute: 'expiresAt',
+      deletionProtection: true,
+    });
+
+    // As per src/adapters/dynamodb.ts define secondary indexes
+    ['uid', 'grantId', 'userCode'].map((column) =>
+      table.addGlobalSecondaryIndex({
+        indexName: `${column}Index`,
+        partitionKey: { name: column, type: AttributeType.STRING },
+        projectionType: ProjectionType.ALL,
+      })
+    );
+
+    return { table };
+  }
+
   private lambdas() {
     const config: NodejsFunctionProps = {
       handler: 'handler',
@@ -157,6 +181,7 @@ export class AuthStack extends Stack {
       functionName: `AuthOidc`,
       environment: {
         DEBUG: 'oidc-provider:*',
+        OAUTH_TABLE: 'bubblyclouds-auth-dynamodb',
       },
     });
 

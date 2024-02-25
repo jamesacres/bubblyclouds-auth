@@ -121,10 +121,26 @@ exports[`Auth Stack 1`] = `
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
     },
-    "AuthGatewayDeploymentE35D8D607affae14d0a5dd980daf2f28db8ba7e5": {
+    "AuthGatewayDeploymentE35D8D60d78af55094bf152288b8fe3636fb4f52": {
       "DependsOn": [
         "AuthGatewayGET8FB7D431",
+        "AuthGatewayoidcauthGET1E3B847F",
+        "AuthGatewayoidcauth315C57FC",
         "AuthGatewayoidcGETDE5F9E2F",
+        "AuthGatewayoidcinteractionuidabortGET75125F05",
+        "AuthGatewayoidcinteractionuidabort9BBBE649",
+        "AuthGatewayoidcinteractionuidconfirmPOST35D61924",
+        "AuthGatewayoidcinteractionuidconfirm0B247DBB",
+        "AuthGatewayoidcinteractionuidfederatedgoogleGET3D6B5AB7",
+        "AuthGatewayoidcinteractionuidfederatedgoogle63999E6D",
+        "AuthGatewayoidcinteractionuidfederatedPOST46752891",
+        "AuthGatewayoidcinteractionuidfederatedC2057843",
+        "AuthGatewayoidcinteractionuidGET40993B29",
+        "AuthGatewayoidcinteractionuidAD2647D5",
+        "AuthGatewayoidcinteractioncallbackgoogleGETFE5B84AF",
+        "AuthGatewayoidcinteractioncallbackgoogleAC19D52D",
+        "AuthGatewayoidcinteractioncallbackE211EC11",
+        "AuthGatewayoidcinteraction6DA0F764",
         "AuthGatewayoidcjwksGET292275E4",
         "AuthGatewayoidcjwks1D2219B3",
         "AuthGatewayoidc8A96E077",
@@ -143,7 +159,7 @@ exports[`Auth Stack 1`] = `
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "AuthGatewayDeploymentE35D8D607affae14d0a5dd980daf2f28db8ba7e5",
+          "Ref": "AuthGatewayDeploymentE35D8D60d78af55094bf152288b8fe3636fb4f52",
         },
         "MethodSettings": [
           {
@@ -376,6 +392,800 @@ exports[`Auth Stack 1`] = `
       },
       "Type": "AWS::ApiGateway::Method",
     },
+    "AuthGatewayoidcauth315C57FC": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidc8A96E077",
+        },
+        "PathPart": "auth",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcauthGET1E3B847F": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcauth315C57FC",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcauthGETApiPermissionAuthStackAuthGateway1EA58262GEToidcauth88C891F9": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc/auth",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcauthGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidcauthEDF9398E": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc/auth",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteraction6DA0F764": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidc8A96E077",
+        },
+        "PathPart": "interaction",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractioncallbackE211EC11": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteraction6DA0F764",
+        },
+        "PathPart": "callback",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractioncallbackgoogleAC19D52D": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteractioncallbackE211EC11",
+        },
+        "PathPart": "google",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractioncallbackgoogleGETApiPermissionAuthStackAuthGateway1EA58262GEToidcinteractioncallbackgoogle9C8FE0F2": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc/interaction/callback/google",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractioncallbackgoogleGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidcinteractioncallbackgoogleF1B8F95B": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc/interaction/callback/google",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractioncallbackgoogleGETFE5B84AF": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractioncallbackgoogleAC19D52D",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidAD2647D5": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteraction6DA0F764",
+        },
+        "PathPart": "{uid}",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractionuidGET40993B29": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractionuidAD2647D5",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidGETApiPermissionAuthStackAuthGateway1EA58262GEToidcinteractionuid9DF74584": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc/interaction/*",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidcinteractionuidC0ECB160": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc/interaction/*",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidabort9BBBE649": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteractionuidAD2647D5",
+        },
+        "PathPart": "abort",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractionuidabortGET75125F05": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractionuidabort9BBBE649",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidabortGETApiPermissionAuthStackAuthGateway1EA58262GEToidcinteractionuidabortD2BC32C5": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc/interaction/*/abort",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidabortGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidcinteractionuidabort1BB146E6": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc/interaction/*/abort",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidconfirm0B247DBB": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteractionuidAD2647D5",
+        },
+        "PathPart": "confirm",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractionuidconfirmPOST35D61924": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractionuidconfirm0B247DBB",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidconfirmPOSTApiPermissionAuthStackAuthGateway1EA58262POSToidcinteractionuidconfirm7ED13E58": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/POST/oidc/interaction/*/confirm",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidconfirmPOSTApiPermissionTestAuthStackAuthGateway1EA58262POSToidcinteractionuidconfirmA126A743": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/POST/oidc/interaction/*/confirm",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidfederatedC2057843": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteractionuidAD2647D5",
+        },
+        "PathPart": "federated",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractionuidfederatedPOST46752891": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractionuidfederatedC2057843",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidfederatedPOSTApiPermissionAuthStackAuthGateway1EA58262POSToidcinteractionuidfederatedE76FB87D": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/POST/oidc/interaction/*/federated",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidfederatedPOSTApiPermissionTestAuthStackAuthGateway1EA58262POSToidcinteractionuidfederated1CA01FD1": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/POST/oidc/interaction/*/federated",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidfederatedgoogle63999E6D": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteractionuidfederatedC2057843",
+        },
+        "PathPart": "google",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractionuidfederatedgoogleGET3D6B5AB7": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractionuidfederatedgoogle63999E6D",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidfederatedgoogleGETApiPermissionAuthStackAuthGateway1EA58262GEToidcinteractionuidfederatedgoogleEB8EF6D7": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc/interaction/*/federated/google",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidfederatedgoogleGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidcinteractionuidfederatedgoogle50EE13B4": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc/interaction/*/federated/google",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
     "AuthGatewayoidcjwks1D2219B3": {
       "Properties": {
         "ParentId": {
@@ -494,11 +1304,13 @@ exports[`Auth Stack 1`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-12345678-eu-west-2",
-          "S3Key": "c30676f6c36d858db67120f0fdd957ce3fcbb17e2337414e732a59c504fe879c.zip",
+          "S3Key": "56933ef3d9e300523db588a9275b7831fca221a9bb15f087b030f50f677c552a.zip",
         },
         "Environment": {
           "Variables": {
             "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+            "DEBUG": "oidc-provider:*",
+            "OAUTH_TABLE": "bubblyclouds-auth-dynamodb",
           },
         },
         "FunctionName": "AuthOidc",
@@ -582,6 +1394,45 @@ exports[`Auth Stack 1`] = `
               "Resource": {
                 "Ref": "sigRSA5AF93E59",
               },
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "AuthTable0711E62F",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "AuthTable0711E62F",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -676,6 +1527,99 @@ exports[`Auth Stack 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "AuthTable0711E62F": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "modelId",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "uid",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "grantId",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "userCode",
+            "AttributeType": "S",
+          },
+        ],
+        "DeletionProtectionEnabled": true,
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "uidIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "uid",
+                "KeyType": "HASH",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": 5,
+              "WriteCapacityUnits": 5,
+            },
+          },
+          {
+            "IndexName": "grantIdIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "grantId",
+                "KeyType": "HASH",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": 5,
+              "WriteCapacityUnits": 5,
+            },
+          },
+          {
+            "IndexName": "userCodeIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "userCode",
+                "KeyType": "HASH",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": 5,
+              "WriteCapacityUnits": 5,
+            },
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "modelId",
+            "KeyType": "HASH",
+          },
+        ],
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true,
+        },
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5,
+        },
+        "TimeToLiveSpecification": {
+          "AttributeName": "expiresAt",
+          "Enabled": true,
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
     },
     "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
       "DependsOn": [
