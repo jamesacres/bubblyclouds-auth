@@ -41,13 +41,52 @@ export class AuthStack extends Stack {
     const { sigRSA } = this.secrets();
     sigRSA.grantRead(oidc.fn);
 
+    // GET /
     authGateway.root.addMethod('GET', redirect.integration);
 
     const oidcResource = authGateway.root.addResource('oidc');
+    // GET /oidc
     oidcResource.addMethod('GET', redirect.integration);
 
     const jwksResource = oidcResource.addResource('jwks');
+    // GET /jwks
     jwksResource.addMethod('GET', oidc.integration);
+
+    const authResource = oidcResource.addResource('auth');
+    authResource.addMethod('GET', oidc.integration);
+
+    const interactionResource = oidcResource.addResource('interaction');
+
+    const interactionCallbackResource =
+      interactionResource.addResource('callback');
+    const interactionCallbackGoogleResource =
+      interactionCallbackResource.addResource('google');
+    // GET /interaction/callback/google
+    interactionCallbackGoogleResource.addMethod('GET', oidc.integration);
+
+    const interactionUidResource = interactionResource.addResource('{uid}');
+    // GET /interaction/:uid
+    interactionUidResource.addMethod('GET', oidc.integration);
+
+    const interactionUidFederatedResource =
+      interactionUidResource.addResource('federated');
+    // POST /interaction/:uid/federated
+    interactionUidFederatedResource.addMethod('POST', oidc.integration);
+
+    const interactionUidFederatedGoogleResource =
+      interactionUidFederatedResource.addResource('google');
+    // GET /interaction/:uid/federated/google
+    interactionUidFederatedGoogleResource.addMethod('GET', oidc.integration);
+
+    const interactionUidConfirmResource =
+      interactionUidResource.addResource('confirm');
+    // POST /interaction/:uid/confirm
+    interactionUidConfirmResource.addMethod('POST', oidc.integration);
+
+    const interactionUidAbortResource =
+      interactionUidResource.addResource('abort');
+    // GET /interaction/:uid/abort
+    interactionUidAbortResource.addMethod('GET', oidc.integration);
   }
 
   private gateway() {
@@ -116,6 +155,9 @@ export class AuthStack extends Stack {
       ...config,
       entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
       functionName: `AuthOidc`,
+      environment: {
+        DEBUG: 'oidc-provider:*',
+      },
     });
 
     return {
