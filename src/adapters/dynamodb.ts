@@ -41,14 +41,35 @@
 // Mention @SachinShekhar in issues to ask questions about this code.
 
 import { Adapter, AdapterPayload } from 'oidc-provider';
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  BatchWriteCommand,
+  BatchWriteCommandInput,
+  DeleteCommand,
+  DeleteCommandInput,
+  DynamoDBDocumentClient,
+  GetCommand,
+  GetCommandInput,
+  QueryCommand,
+  QueryCommandInput,
+  UpdateCommand,
+  UpdateCommandInput,
+} from '@aws-sdk/lib-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 
 const TABLE_NAME = process.env.OAUTH_TABLE!;
 const TABLE_REGION = process.env.AWS_REGION;
 
-const dynamoClient = new DynamoDB.DocumentClient({
-  region: TABLE_REGION,
-});
+const dynamoClient = DynamoDBDocumentClient.from(
+  new DynamoDBClient({
+    region: TABLE_REGION,
+  }),
+  {
+    marshallOptions: {
+      removeUndefinedValues: true,
+    },
+  }
+);
 
 export class DynamoDBAdapter implements Adapter {
   name: string;
@@ -67,7 +88,7 @@ export class DynamoDBAdapter implements Adapter {
       ? Math.floor(Date.now() / 1000) + expiresIn
       : null;
 
-    const params: DynamoDB.DocumentClient.UpdateItemInput = {
+    const params: UpdateCommandInput = {
       TableName: TABLE_NAME,
       Key: { modelId: this.name + '-' + id },
       UpdateExpression:
@@ -84,20 +105,22 @@ export class DynamoDBAdapter implements Adapter {
         ...(payload.grantId ? { ':grantId': payload.grantId } : {}),
       },
     };
+    const command = new UpdateCommand(params);
 
-    await dynamoClient.update(params).promise();
+    await dynamoClient.send(command);
   }
 
   async find(id: string): Promise<AdapterPayload | undefined> {
-    const params: DynamoDB.DocumentClient.GetItemInput = {
+    const params: GetCommandInput = {
       TableName: TABLE_NAME,
       Key: { modelId: this.name + '-' + id },
       ProjectionExpression: 'payload, expiresAt',
     };
+    const command = new GetCommand(params);
 
     const result = <
       { payload: AdapterPayload; expiresAt?: number } | undefined
-    >(await dynamoClient.get(params).promise()).Item;
+    >(await dynamoClient.send(command)).Item;
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
     if (!result || (result.expiresAt && Date.now() > result.expiresAt * 1000)) {
@@ -108,7 +131,7 @@ export class DynamoDBAdapter implements Adapter {
   }
 
   async findByUserCode(userCode: string): Promise<AdapterPayload | undefined> {
-    const params: DynamoDB.DocumentClient.QueryInput = {
+    const params: QueryCommandInput = {
       TableName: TABLE_NAME,
       IndexName: 'userCodeIndex',
       KeyConditionExpression: 'userCode = :userCode',
@@ -118,10 +141,11 @@ export class DynamoDBAdapter implements Adapter {
       Limit: 1,
       ProjectionExpression: 'payload, expiresAt',
     };
+    const command = new QueryCommand(params);
 
     const result = <
       { payload: AdapterPayload; expiresAt?: number } | undefined
-    >(await dynamoClient.query(params).promise()).Items?.[0];
+    >(await dynamoClient.send(command)).Items?.[0];
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
     if (!result || (result.expiresAt && Date.now() > result.expiresAt * 1000)) {
@@ -132,7 +156,7 @@ export class DynamoDBAdapter implements Adapter {
   }
 
   async findByUid(uid: string): Promise<AdapterPayload | undefined> {
-    const params: DynamoDB.DocumentClient.QueryInput = {
+    const params: QueryCommandInput = {
       TableName: TABLE_NAME,
       IndexName: 'uidIndex',
       KeyConditionExpression: 'uid = :uid',
@@ -142,10 +166,11 @@ export class DynamoDBAdapter implements Adapter {
       Limit: 1,
       ProjectionExpression: 'payload, expiresAt',
     };
+    const command = new QueryCommand(params);
 
     const result = <
       { payload: AdapterPayload; expiresAt?: number } | undefined
-    >(await dynamoClient.query(params).promise()).Items?.[0];
+    >(await dynamoClient.send(command)).Items?.[0];
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
     if (!result || (result.expiresAt && Date.now() > result.expiresAt * 1000)) {
@@ -156,7 +181,7 @@ export class DynamoDBAdapter implements Adapter {
   }
 
   async consume(id: string): Promise<void> {
-    const params: DynamoDB.DocumentClient.UpdateItemInput = {
+    const params: UpdateCommandInput = {
       TableName: TABLE_NAME,
       Key: { modelId: this.name + '-' + id },
       UpdateExpression: 'SET #payload.#consumed = :value',
@@ -169,24 +194,27 @@ export class DynamoDBAdapter implements Adapter {
       },
       ConditionExpression: 'attribute_exists(modelId)',
     };
+    const command = new UpdateCommand(params);
 
-    await dynamoClient.update(params).promise();
+    await dynamoClient.send(command);
   }
 
   async destroy(id: string): Promise<void> {
-    const params: DynamoDB.DocumentClient.DeleteItemInput = {
+    const params: DeleteCommandInput = {
       TableName: TABLE_NAME,
       Key: { modelId: this.name + '-' + id },
     };
+    const command = new DeleteCommand(params);
 
-    await dynamoClient.delete(params).promise();
+    await dynamoClient.send(command);
   }
 
   async revokeByGrantId(grantId: string): Promise<void> {
-    let ExclusiveStartKey: DynamoDB.DocumentClient.Key | undefined = undefined;
+    let ExclusiveStartKey: Record<string, NativeAttributeValue> | undefined =
+      undefined;
 
     do {
-      const params: DynamoDB.DocumentClient.QueryInput = {
+      const params: QueryCommandInput = {
         TableName: TABLE_NAME,
         IndexName: 'grantIdIndex',
         KeyConditionExpression: 'grantId = :grantId',
@@ -197,8 +225,9 @@ export class DynamoDBAdapter implements Adapter {
         Limit: 25,
         ExclusiveStartKey,
       };
+      const queryCommand = new QueryCommand(params);
 
-      const queryResult = await dynamoClient.query(params).promise();
+      const queryResult = await dynamoClient.send(queryCommand);
       ExclusiveStartKey = queryResult.LastEvaluatedKey;
 
       const items = <{ modelId: string }[] | undefined>queryResult.Items;
@@ -207,19 +236,16 @@ export class DynamoDBAdapter implements Adapter {
         return;
       }
 
-      const batchWriteParams: DynamoDB.DocumentClient.BatchWriteItemInput = {
+      const batchWriteParams: BatchWriteCommandInput = {
         RequestItems: {
-          [TABLE_NAME]: items.reduce<DynamoDB.DocumentClient.WriteRequests>(
-            (acc, item) => [
-              ...acc,
-              { DeleteRequest: { Key: { modelId: item.modelId } } },
-            ],
-            []
-          ),
+          [TABLE_NAME]: items.map((item) => ({
+            DeleteRequest: { Key: { modelId: item.modelId } },
+          })),
         },
       };
+      const command = new BatchWriteCommand(batchWriteParams);
 
-      await dynamoClient.batchWrite(batchWriteParams).promise();
+      await dynamoClient.send(command);
     } while (ExclusiveStartKey);
   }
 }
