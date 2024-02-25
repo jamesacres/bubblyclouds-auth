@@ -56,9 +56,11 @@ import {
   UpdateCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
+import { backOff } from 'exponential-backoff';
 
 const TABLE_NAME = process.env.OAUTH_TABLE!;
 const TABLE_REGION = process.env.AWS_REGION;
+const MAX_RETRIES = 5;
 
 const dynamoClient = DynamoDBDocumentClient.from(
   new DynamoDBClient({
@@ -118,9 +120,21 @@ export class DynamoDBAdapter implements Adapter {
     };
     const command = new GetCommand(params);
 
-    const result = <
-      { payload: AdapterPayload; expiresAt?: number } | undefined
-    >(await dynamoClient.send(command)).Item;
+    const getResult = async () => {
+      const commandResult = await dynamoClient.send(command);
+      const result = commandResult?.Item as
+        | { payload: AdapterPayload; expiresAt?: number }
+        | undefined;
+      if (!result) {
+        throw Error('not found');
+      }
+      return result;
+    };
+
+    const result = await backOff(getResult, {
+      jitter: 'full',
+      numOfAttempts: MAX_RETRIES,
+    });
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
     if (!result || (result.expiresAt && Date.now() > result.expiresAt * 1000)) {
@@ -143,9 +157,21 @@ export class DynamoDBAdapter implements Adapter {
     };
     const command = new QueryCommand(params);
 
-    const result = <
-      { payload: AdapterPayload; expiresAt?: number } | undefined
-    >(await dynamoClient.send(command)).Items?.[0];
+    const getResult = async () => {
+      const commandResult = await dynamoClient.send(command);
+      const result = commandResult?.Items?.[0] as
+        | { payload: AdapterPayload; expiresAt?: number }
+        | undefined;
+      if (!result) {
+        throw Error('not found');
+      }
+      return result;
+    };
+
+    const result = await backOff(getResult, {
+      jitter: 'full',
+      numOfAttempts: MAX_RETRIES,
+    });
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
     if (!result || (result.expiresAt && Date.now() > result.expiresAt * 1000)) {
@@ -168,9 +194,21 @@ export class DynamoDBAdapter implements Adapter {
     };
     const command = new QueryCommand(params);
 
-    const result = <
-      { payload: AdapterPayload; expiresAt?: number } | undefined
-    >(await dynamoClient.send(command)).Items?.[0];
+    const getResult = async () => {
+      const commandResult = await dynamoClient.send(command);
+      const result = commandResult?.Items?.[0] as
+        | { payload: AdapterPayload; expiresAt?: number }
+        | undefined;
+      if (!result) {
+        throw Error('not found');
+      }
+      return result;
+    };
+
+    const result = await backOff(getResult, {
+      jitter: 'full',
+      numOfAttempts: MAX_RETRIES,
+    });
 
     // DynamoDB can take upto 48 hours to drop expired items, so a check is required
     if (!result || (result.expiresAt && Date.now() > result.expiresAt * 1000)) {
