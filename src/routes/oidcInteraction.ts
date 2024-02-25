@@ -1,22 +1,22 @@
 import { randomBytes } from 'crypto';
 import { Context } from 'koa';
-import render from '@koa/ejs';
 import { koaBody as bodyParser } from 'koa-body';
 import Router from 'koa-router';
 import { getGoogleClient } from '../lib/google';
-import path from 'path';
 import { Client } from 'openid-client';
 import { Account, UserStore } from '../models/account';
 import Provider from 'oidc-provider';
 import { constants } from 'http2';
+import { render } from 'ejs';
+import { repost } from '../views/repost';
 
 export const oidcInteraction = (provider: Provider) => {
   // Federated Clients
   let _googleClient: Client;
   const googleClient = async () => {
     if (!_googleClient) {
-      const callbackUrl = `http://localhost:3000/interaction/callback/google`;
-      _googleClient = await getGoogleClient('googleClientId', callbackUrl);
+      const callbackUrl = `http://localhost:3000/oidc/interaction/callback/google`;
+      _googleClient = await getGoogleClient('xxx', callbackUrl);
     }
     return _googleClient;
   };
@@ -27,13 +27,6 @@ export const oidcInteraction = (provider: Provider) => {
     json: false,
     patchNode: true,
     patchKoa: true,
-  });
-
-  // Render views
-  render(provider.app, {
-    cache: false,
-    viewExt: 'ejs',
-    root: path.join(__dirname, 'views'),
   });
 
   // Setup interaction routes
@@ -77,7 +70,7 @@ export const oidcInteraction = (provider: Provider) => {
     const state = ctx.params.uid;
     const nonce = randomBytes(32).toString('hex');
 
-    const nextPath = `/interaction/${ctx.params.uid}/federated`;
+    const nextPath = `/oidc/interaction/${ctx.params.uid}/federated`;
     ctx.cookies.set('google.nonce', nonce, {
       path: nextPath,
       sameSite: 'strict',
@@ -93,10 +86,14 @@ export const oidcInteraction = (provider: Provider) => {
     );
   });
 
-  router.get('/interaction/callback/google', (ctx: Context) => {
+  router.get('/interaction/callback/google', async (ctx: Context) => {
     // Callback page, will POST results to /interaction/:uid/federated
-    const nonce = randomBytes(16).toString('base64');
-    return ctx.render('repost', { layout: false, upstream: 'google', nonce });
+    const nonce = ctx.state.cspNonce;
+    ctx.response.body = render(repost, {
+      nonce,
+      layout: false,
+      upstream: 'google',
+    });
   });
 
   router.post('/interaction/:uid/federated', body, async (ctx) => {
@@ -104,7 +101,7 @@ export const oidcInteraction = (provider: Provider) => {
     if (ctx.request.body.upstream === 'google') {
       const callbackParams = (await googleClient()).callbackParams(ctx.req);
       const nonce = ctx.cookies.get('google.nonce');
-      const thisPath = `/interaction/${ctx.params.uid}/federated`;
+      const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('google.nonce', null, { path: thisPath });
 
       // TODO verify using Google's library?
@@ -126,6 +123,7 @@ export const oidcInteraction = (provider: Provider) => {
           accountId: account.accountId,
         },
       };
+      // TODO fix Refused to send form data to 'http://localhost:3000/oidc/interaction/ra2TRx0Mij4mHes3TVMzF/federated' because it violates the following Content Security Policy directive: "form-action 'self'".
       return provider.interactionFinished(ctx.req, ctx.res, result, {
         mergeWithLastSubmission: false,
       });

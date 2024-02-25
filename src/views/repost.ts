@@ -1,4 +1,4 @@
-<html>
+export const repost = `<html>
 
 <head>
   <title>Fragment Federated Callback Repost Form</title>
@@ -22,7 +22,7 @@
 
     var form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/interaction/' + uid + '/federated';
+    form.action = '/oidc/interaction/' + uid + '/federated';
     Object.keys(fields).forEach((key) => {
       if (key) { // empty fragment will yield {"":""};
         var input = document.createElement('input');
@@ -45,4 +45,4 @@
   </script>
 </body>
 
-</html>
+</html>`;

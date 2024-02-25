@@ -9,6 +9,7 @@ import { oidcInteraction } from '../routes/oidcInteraction';
 import { Account } from '../models/account';
 import { constants } from 'http2';
 import { DynamoDBAdapter } from '../adapters/dynamodb';
+import { randomBytes } from 'crypto';
 
 export interface OidcOptions {
   keys: JWK[];
@@ -44,7 +45,14 @@ const initProvider = ({ keys }: OidcOptions) => {
 
   const provider = new Provider('http://localhost:3000', configuration);
 
-  provider.use(helmet());
+  provider.use(async (ctx, next) => {
+    ctx.state.cspNonce = randomBytes(32).toString('hex');
+    return helmet.contentSecurityPolicy({
+      directives: {
+        scriptSrc: ["'self'", `'nonce-${ctx.state.cspNonce}'`],
+      },
+    })(ctx, next);
+  });
 
   provider.use(async (ctx, next) => {
     console.log('pre middleware', ctx.method, ctx.path);

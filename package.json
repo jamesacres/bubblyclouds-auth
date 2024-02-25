@@ -11,6 +11,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.23.9",
     "@types/aws-lambda": "^8.10.134",
+    "@types/ejs": "^3.1.5",
     "@types/jest": "^29.5.12",
     "@types/koa-router": "^7.4.8",
     "@types/node": "^20.11.19",
@@ -32,7 +33,7 @@
     "@aws-sdk/client-dynamodb": "^3.521.0",
     "@aws-sdk/client-secrets-manager": "^3.521.0",
     "@aws-sdk/lib-dynamodb": "^3.521.0",
-    "@koa/ejs": "^5.1.0",
+    "ejs": "^3.1.9",
     "exponential-backoff": "^3.1.1",
     "koa-body": "^6.0.1",
     "koa-helmet": "^7.0.2",
