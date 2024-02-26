@@ -9,7 +9,7 @@ import Koa from 'koa';
 const oidcOptions = async (): Promise<OidcOptions> => {
   const secret = await getSecret('sigRSA');
   const keys: JWK[] = [JSON.parse(secret)];
-  return { keys, issuer: 'http://localhost:3000' };
+  return { keys, issuer: 'https://localhost:3001' };
 };
 
 let serverlessHandler: serverless.Handler;
@@ -24,9 +24,6 @@ const initServerlessHandler = async (): Promise<serverless.Handler> => {
       ) {
         ctx.request.url = `/oidc${ctx.request.url}`;
       }
-
-      // TODO request.secure is true and protocol is https because of serverless
-      // This breaks oidc provider redirects
 
       await next();
     });

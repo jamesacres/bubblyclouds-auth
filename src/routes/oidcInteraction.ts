@@ -15,7 +15,7 @@ export const oidcInteraction = (provider: Provider) => {
   let _googleClient: Client;
   const googleClient = async () => {
     if (!_googleClient) {
-      const callbackUrl = `http://localhost:3000/oidc/interaction/callback/google`;
+      const callbackUrl = `https://localhost:3001/oidc/interaction/callback/google`;
       _googleClient = await getGoogleClient('xxx', callbackUrl);
     }
     return _googleClient;
@@ -123,7 +123,7 @@ export const oidcInteraction = (provider: Provider) => {
           accountId: account.accountId,
         },
       };
-      // TODO fix Refused to send form data to 'http://localhost:3000/oidc/interaction/ra2TRx0Mij4mHes3TVMzF/federated' because it violates the following Content Security Policy directive: "form-action 'self'".
+
       return provider.interactionFinished(ctx.req, ctx.res, result, {
         mergeWithLastSubmission: false,
       });
