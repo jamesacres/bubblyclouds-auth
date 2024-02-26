@@ -48,13 +48,20 @@ export class AuthStack extends Stack {
     // GET /
     authGateway.root.addMethod('GET', redirect.integration);
 
+    const jwksResource = authGateway.root.addResource('jwks');
+    // GET /jwks
+    jwksResource.addMethod('GET', oidc.integration);
+
+    const wellKnownResource = authGateway.root.addResource('.well-known');
+    const openidConfigurationResource = wellKnownResource.addResource(
+      'openid-configuration'
+    );
+    // GET /.well-known/openid-configuration
+    openidConfigurationResource.addMethod('GET', oidc.integration);
+
     const oidcResource = authGateway.root.addResource('oidc');
     // GET /oidc
     oidcResource.addMethod('GET', redirect.integration);
-
-    const jwksResource = oidcResource.addResource('jwks');
-    // GET /jwks
-    jwksResource.addMethod('GET', oidc.integration);
 
     const authResource = oidcResource.addResource('auth');
     authResource.addMethod('GET', oidc.integration);

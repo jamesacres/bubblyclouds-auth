@@ -12,10 +12,11 @@ import { DynamoDBAdapter } from '../adapters/dynamodb';
 import { randomBytes } from 'crypto';
 
 export interface OidcOptions {
+  issuer: string;
   keys: JWK[];
 }
 
-const initProvider = ({ keys }: OidcOptions) => {
+const initProvider = ({ keys, issuer }: OidcOptions) => {
   console.info('initProvider');
   const configuration: Configuration = {
     adapter: DynamoDBAdapter,
@@ -43,7 +44,7 @@ const initProvider = ({ keys }: OidcOptions) => {
     },
   };
 
-  const provider = new Provider('http://localhost:3000', configuration);
+  const provider = new Provider(issuer, configuration);
 
   provider.use(async (ctx, next) => {
     ctx.state.cspNonce = randomBytes(32).toString('hex');
