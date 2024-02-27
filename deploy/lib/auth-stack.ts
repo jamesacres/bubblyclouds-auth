@@ -70,6 +70,10 @@ export class AuthStack extends Stack {
     // GET /oidc/auth/:uid
     authUidResource.addMethod('GET', oidc.integration);
 
+    const tokenResource = oidcResource.addResource('token');
+    // POST /oidc/token
+    tokenResource.addMethod('POST', oidc.integration);
+
     const interactionResource = oidcResource.addResource('interaction');
 
     const interactionCallbackResource =

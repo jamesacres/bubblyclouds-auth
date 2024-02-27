@@ -42,6 +42,34 @@ const initProvider = ({ keys, issuer }: OidcOptions) => {
         return `/oidc/interaction/${interaction.uid}`;
       },
     },
+    loadExistingGrant: async (ctx) => {
+      const grantId =
+        ctx.oidc.result?.consent?.grantId ||
+        (ctx.oidc.client &&
+          ctx.oidc.session?.grantIdFor(ctx.oidc.client?.clientId));
+      if (grantId) {
+        return ctx.oidc.provider.Grant.find(grantId);
+      }
+
+      // We always want to skip consent screen
+      if (ctx.oidc.client && ctx.oidc.session) {
+        console.info('Skipping consent');
+        const grant = new ctx.oidc.provider.Grant({
+          clientId: ctx.oidc.client.clientId,
+          accountId: ctx.oidc.session.accountId,
+        });
+        grant.addOIDCScope(Array.from(ctx.oidc.requestParamScopes).join(' '));
+        grant.addOIDCClaims(Array.from(ctx.oidc.requestParamClaims));
+        grant.addResourceScope(
+          'urn:example:resource-indicator',
+          'api:read api:write'
+        );
+        await grant.save();
+        return grant;
+      }
+
+      return undefined;
+    },
   };
 
   const provider = new Provider(issuer, configuration);
