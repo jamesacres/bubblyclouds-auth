@@ -22,7 +22,10 @@ const initProvider = ({ keys, issuer }: OidcOptions) => {
     adapter: DynamoDBAdapter,
     clients: [
       {
+        // TODO configure all ttls, including the max grant time
         access_token_ttl: 28800,
+        // TODO configure JWT response
+        // TODO configure resource indicators
         application_type: 'web',
         client_id: 'bubbly-sudoku',
         client_name: 'Bubbly Sudoku',
