@@ -48,7 +48,6 @@ export const oidcInteraction = (provider: Provider) => {
   });
 
   router.get('/interaction/:uid', async (ctx: Context, next) => {
-    console.info(ctx.req);
     const { uid, prompt } = await provider.interactionDetails(ctx.req, ctx.res);
     if (prompt.name === 'login') {
       // Caller will indicate which to login with, for now default to Google
@@ -118,15 +117,19 @@ export const oidcInteraction = (provider: Provider) => {
         tokenset.claims()
       );
 
-      const result = {
-        login: {
-          accountId: account.accountId,
+      return provider.interactionFinished(
+        ctx.req,
+        ctx.res,
+        {
+          login: {
+            accountId: account.accountId,
+            remember: false, // closing and reopening browser forces new login
+          },
         },
-      };
-
-      return provider.interactionFinished(ctx.req, ctx.res, result, {
-        mergeWithLastSubmission: false,
-      });
+        {
+          mergeWithLastSubmission: false,
+        }
+      );
     }
     return undefined;
   });

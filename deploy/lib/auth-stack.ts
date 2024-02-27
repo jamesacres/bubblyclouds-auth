@@ -74,37 +74,51 @@ export class AuthStack extends Stack {
     // POST /oidc/token
     tokenResource.addMethod('POST', oidc.integration);
 
+    const sessionResource = oidcResource.addResource('session');
+
+    const sessionEndResource = sessionResource.addResource('end');
+    // GET /oidc/session/end
+    sessionEndResource.addMethod('GET', oidc.integration);
+
+    const sessionEndConfirmResource = sessionEndResource.addResource('confirm');
+    // POST /oidc/session/end/confirm
+    sessionEndConfirmResource.addMethod('POST', oidc.integration);
+
+    const sessionEndSuccessResource = sessionEndResource.addResource('success');
+    // GET /oidc/session/end/success
+    sessionEndSuccessResource.addMethod('GET', oidc.integration);
+
     const interactionResource = oidcResource.addResource('interaction');
 
     const interactionCallbackResource =
       interactionResource.addResource('callback');
     const interactionCallbackGoogleResource =
       interactionCallbackResource.addResource('google');
-    // GET /interaction/callback/google
+    // GET /oidc/interaction/callback/google
     interactionCallbackGoogleResource.addMethod('GET', oidc.integration);
 
     const interactionUidResource = interactionResource.addResource('{uid}');
-    // GET /interaction/:uid
+    // GET /oidc/interaction/:uid
     interactionUidResource.addMethod('GET', oidc.integration);
 
     const interactionUidFederatedResource =
       interactionUidResource.addResource('federated');
-    // POST /interaction/:uid/federated
+    // POST /oidc/interaction/:uid/federated
     interactionUidFederatedResource.addMethod('POST', oidc.integration);
 
     const interactionUidFederatedGoogleResource =
       interactionUidFederatedResource.addResource('google');
-    // GET /interaction/:uid/federated/google
+    // GET /oidc/interaction/:uid/federated/google
     interactionUidFederatedGoogleResource.addMethod('GET', oidc.integration);
 
     const interactionUidConfirmResource =
       interactionUidResource.addResource('confirm');
-    // POST /interaction/:uid/confirm
+    // POST /oidc/interaction/:uid/confirm
     interactionUidConfirmResource.addMethod('POST', oidc.integration);
 
     const interactionUidAbortResource =
       interactionUidResource.addResource('abort');
-    // GET /interaction/:uid/abort
+    // GET /oidc/interaction/:uid/abort
     interactionUidAbortResource.addMethod('GET', oidc.integration);
   }
 
