@@ -22,8 +22,6 @@ const initProvider = ({ keys, issuer }: OidcOptions) => {
     adapter: DynamoDBAdapter,
     clients: [
       {
-        // TODO configure all ttls, including the max grant time
-        access_token_ttl: 28800,
         // TODO configure JWT response
         // TODO configure resource indicators
         application_type: 'web',
@@ -44,6 +42,42 @@ const initProvider = ({ keys, issuer }: OidcOptions) => {
       url(_ctx, interaction) {
         return `/oidc/interaction/${interaction.uid}`;
       },
+    },
+    ttl: {
+      AccessToken: function AccessTokenTTL(ctx, token) {
+        return token.resourceServer?.accessTokenTTL || 60 * 60 * 12; // 12 hours in seconds
+      },
+      AuthorizationCode: 60 /* 1 minute in seconds */,
+      BackchannelAuthenticationRequest:
+        function BackchannelAuthenticationRequestTTL(ctx) {
+          if (ctx?.oidc && ctx.oidc.params?.requested_expiry) {
+            return Math.min(10 * 60, +ctx.oidc.params.requested_expiry); // 10 minutes in seconds or requested_expiry, whichever is shorter
+          }
+
+          return 10 * 60; // 10 minutes in seconds
+        },
+      ClientCredentials: function ClientCredentialsTTL(ctx, token) {
+        return token.resourceServer?.accessTokenTTL || 10 * 60; // 10 minutes in seconds
+      },
+      DeviceCode: 600 /* 10 minutes in seconds */,
+      Grant: 31536000 /* 1 year in seconds - must be higher than max refresh token time */,
+      IdToken: 3600 /* 1 hour in seconds */,
+      Interaction: 3600 /* 1 hour in seconds */,
+      RefreshToken: function RefreshTokenTTL(ctx, token, client) {
+        if (
+          ctx &&
+          ctx.oidc.entities.RotatedRefreshToken &&
+          client.applicationType === 'web' &&
+          client.clientAuthMethod === 'none' &&
+          !token.isSenderConstrained()
+        ) {
+          // Non-Sender Constrained SPA RefreshTokens do not have infinite expiration through rotation
+          return ctx.oidc.entities.RotatedRefreshToken.remainingTTL;
+        }
+
+        return 14 * 24 * 60 * 60; // 14 days in seconds
+      },
+      Session: 1209600 /* 14 days in seconds */,
     },
     loadExistingGrant: async (ctx) => {
       const grantId =
