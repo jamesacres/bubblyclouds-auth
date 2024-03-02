@@ -11,6 +11,7 @@ import { constants } from 'http2';
 import { render } from 'ejs';
 import { repost } from '../views/repost';
 import { AppConfig } from '../types/AppConfig';
+import { login } from '../views/login';
 
 export const oidcInteraction = (
   provider: Provider,
@@ -57,10 +58,18 @@ export const oidcInteraction = (
   });
 
   router.get('/interaction/:uid', async (ctx: Context, next) => {
-    const { uid, prompt } = await provider.interactionDetails(ctx.req, ctx.res);
-    if (prompt.name === 'login') {
-      // Caller will indicate which to login with, for now default to Google
-      return ctx.redirect(`/oidc/interaction/${uid}/federated/google`);
+    const { uid, params, prompt } = await provider.interactionDetails(
+      ctx.req,
+      ctx.res
+    );
+    if (prompt.name === 'login' && params.client_id) {
+      const client = await provider.Client.find(<string>params.client_id);
+      return (ctx.response.body = render(login, {
+        uid,
+        client,
+      }));
+      // // Caller will indicate which to login with, for now default to Google
+      // return ctx.redirect(`/oidc/interaction/${uid}/federated/google`);
     } else if (prompt.name === 'consent') {
       throw Error('consent view not implemented');
     }

@@ -1,7 +1,7 @@
 export const repost = `<html>
 
 <head>
-  <title>Fragment Federated Callback Repost Form</title>
+  <title>Bubbly Clouds Sign in</title>
 </head>
 
 <body>

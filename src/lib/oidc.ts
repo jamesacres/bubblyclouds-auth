@@ -208,6 +208,7 @@ const initProvider = ({
     const directives = helmet.contentSecurityPolicy.getDefaultDirectives();
     delete directives['form-action']; // (because we redirect to clients after POST)
     delete directives['script-src']; // (nonce configured below)
+    delete directives['img-src']; // (configured below)
 
     const pHelmet = promisify(
       helmet({
@@ -216,6 +217,7 @@ const initProvider = ({
           directives: {
             ...directives,
             scriptSrc: ["'self'", `'nonce-${ctx.state.cspNonce}'`],
+            imgSrc: ["'self'", 'https://bubblyclouds.com'],
           },
         },
       })
