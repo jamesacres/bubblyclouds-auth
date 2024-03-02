@@ -106,7 +106,7 @@ export const oidcInteraction = (
 
   router.post('/interaction/:uid/federated', body, async (ctx) => {
     // callback from repost
-    if (ctx.request.body.upstream === 'google') {
+    if (ctx.request.body?.upstream === 'google') {
       const callbackParams = (await googleClient()).callbackParams(ctx.req);
       const nonce = ctx.cookies.get('google.nonce');
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
@@ -152,7 +152,8 @@ export const oidcInteraction = (
         }
       );
     }
-    return undefined;
+
+    throw new errors.InvalidRequest('unexpected request');
   });
 
   router.post('/interaction/:uid/confirm', body, async (ctx) => {
