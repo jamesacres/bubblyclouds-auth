@@ -9,14 +9,22 @@ import Provider from 'oidc-provider';
 import { constants } from 'http2';
 import { render } from 'ejs';
 import { repost } from '../views/repost';
+import { AppConfig } from '../types/AppConfig';
 
-export const oidcInteraction = (provider: Provider) => {
+export const oidcInteraction = (
+  provider: Provider,
+  serverUrl: string,
+  federatedClients: AppConfig['federatedClients']
+) => {
   // Federated Clients
   let _googleClient: Client;
   const googleClient = async () => {
     if (!_googleClient) {
-      const callbackUrl = `https://localhost:3001/oidc/interaction/callback/google`;
-      _googleClient = await getGoogleClient('xxx', callbackUrl);
+      const callbackUrl = `${serverUrl}/oidc/interaction/callback/google`;
+      _googleClient = await getGoogleClient(
+        federatedClients.google.clientId,
+        callbackUrl
+      );
     }
     return _googleClient;
   };

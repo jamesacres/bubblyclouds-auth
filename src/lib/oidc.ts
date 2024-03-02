@@ -1,8 +1,6 @@
-import helmet from 'koa-helmet';
+import helmet from 'helmet';
 import Provider, {
-  ClientMetadata,
   Configuration,
-  JWK,
   KoaContextWithOIDC,
   ResourceServer,
   errors,
@@ -14,24 +12,8 @@ import { DynamoDBAdapter } from '../adapters/dynamodb';
 import { randomBytes } from 'crypto';
 import { logoutSource } from '../views/logoutSource';
 import { postLogoutSuccessSource } from '../views/postLogoutSuccessSource';
-
-export interface OidcOptions {
-  appConfig: object;
-  issuer: string;
-  keys: JWK[];
-}
-
-const clients: ClientMetadata[] = [
-  {
-    application_type: 'web',
-    client_id: 'bubbly-sudoku',
-    client_name: 'Bubbly Sudoku',
-    grant_types: ['authorization_code', 'refresh_token'],
-    redirect_uris: ['http://localhost:3000/cb'],
-    response_types: ['code'],
-    token_endpoint_auth_method: 'none',
-  },
-];
+import { promisify } from 'util';
+import { OidcOptions } from '../types/OidcOptions';
 
 const defaultResource: ResourceServer = {
   scope: 'openid',
@@ -47,14 +29,19 @@ const resources: {
   'https://bubbly-sudoku.com': { allowedClientIds: ['bubbly-sudoku'] },
 };
 
-const initProvider = ({ keys, issuer }: OidcOptions) => {
+const initProvider = ({
+  appConfig: { clients, serverUrl, federatedClients },
+  keys,
+  issuer,
+}: OidcOptions) => {
   console.info('initProvider');
   const configuration: Configuration = {
     // TODO configure cookies
-    adapter: DynamoDBAdapter,
     clients,
+    adapter: DynamoDBAdapter,
     jwks: { keys },
     claims: {
+      // requesting a scope will return the mapped claims
       address: ['address'],
       email: ['email', 'email_verified'],
       phone: ['phone_number', 'phone_number_verified'],
@@ -214,12 +201,26 @@ const initProvider = ({ keys, issuer }: OidcOptions) => {
 
   provider.use(async (ctx, next) => {
     ctx.state.cspNonce = randomBytes(32).toString('hex');
-    return helmet.contentSecurityPolicy({
-      directives: {
-        scriptSrc: ["'self'", `'nonce-${ctx.state.cspNonce}'`],
-        formAction: ["'self'", 'http://localhost:3000'], // TODO remove dev
-      },
-    })(ctx, next);
+
+    const directives = helmet.contentSecurityPolicy.getDefaultDirectives();
+    delete directives['form-action']; // (because we redirect to clients after POST)
+    delete directives['script-src']; // (nonce configured below)
+
+    const pHelmet = promisify(
+      helmet({
+        contentSecurityPolicy: {
+          useDefaults: false,
+          directives: {
+            ...directives,
+            scriptSrc: ["'self'", `'nonce-${ctx.state.cspNonce}'`],
+          },
+        },
+      })
+    );
+
+    await pHelmet(ctx.req, ctx.res);
+
+    return next();
   });
 
   provider.use(async (ctx, next) => {
@@ -244,7 +245,7 @@ const initProvider = ({ keys, issuer }: OidcOptions) => {
     }
   );
 
-  provider.use(oidcInteraction(provider).routes());
+  provider.use(oidcInteraction(provider, serverUrl, federatedClients).routes());
 
   return provider;
 };

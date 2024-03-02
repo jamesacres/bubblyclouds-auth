@@ -57,8 +57,8 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 import { backOff } from 'exponential-backoff';
-import { Model } from './types/Model';
-import { BubblyAdapterPayload } from './types/BubblyAdapterPayload';
+import { Model } from '../types/Model';
+import { BubblyAdapterPayload } from '../types/BubblyAdapterPayload';
 
 const TABLE_NAME = process.env.OAUTH_TABLE!;
 const TABLE_REGION = process.env.AWS_REGION;

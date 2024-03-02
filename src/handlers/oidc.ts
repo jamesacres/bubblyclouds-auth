@@ -1,13 +1,15 @@
 import { Handler } from 'aws-lambda';
 import { JWK } from 'oidc-provider';
 import serverless from 'serverless-http';
-import { OidcOptions, initProvider } from '../lib/oidc';
+import { initProvider } from '../lib/oidc';
+import { OidcOptions } from '../types/OidcOptions';
 import { getSecret } from '../utils/secrets';
 import mount from 'koa-mount';
 import Koa from 'koa';
+import { AppConfig } from '../types/AppConfig';
 
 const oidcOptions = async (): Promise<OidcOptions> => {
-  const appConfig = await fetch(
+  const appConfig: AppConfig = await fetch(
     `http://localhost:2772${process.env.AWS_APPCONFIG_EXTENSION_PREFETCH_LIST}`
   ).then(async (res) => {
     const response = await res.json();
@@ -16,10 +18,9 @@ const oidcOptions = async (): Promise<OidcOptions> => {
     }
     return response;
   });
-  console.info('config', appConfig);
   const secret = await getSecret('sigRSA');
   const keys: JWK[] = [JSON.parse(secret)];
-  return { appConfig, keys, issuer: 'https://localhost:3001' };
+  return { appConfig, keys, issuer: appConfig.serverUrl };
 };
 
 let serverlessHandler: serverless.Handler;

@@ -7,8 +7,8 @@ import {
 import { IdTokenClaims } from 'openid-client';
 import { nanoid } from 'nanoid';
 import { DynamoDBAdapter } from '../adapters/dynamodb';
-import { Model } from '../adapters/types/Model';
-import { BubblyUserProfile } from '../adapters/types/BubblyUserProfile';
+import { Model } from '../types/Model';
+import { BubblyUserProfile } from '../types/BubblyUserProfile';
 
 export enum UserStore {
   GOOGLE = 'google',
