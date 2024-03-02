@@ -7,9 +7,19 @@ import mount from 'koa-mount';
 import Koa from 'koa';
 
 const oidcOptions = async (): Promise<OidcOptions> => {
+  const appConfig = await fetch(
+    `http://localhost:2772${process.env.AWS_APPCONFIG_EXTENSION_PREFETCH_LIST}`
+  ).then(async (res) => {
+    const response = await res.json();
+    if (!res.ok) {
+      throw Error(response);
+    }
+    return response;
+  });
+  console.info('config', appConfig);
   const secret = await getSecret('sigRSA');
   const keys: JWK[] = [JSON.parse(secret)];
-  return { keys, issuer: 'https://localhost:3001' };
+  return { appConfig, keys, issuer: 'https://localhost:3001' };
 };
 
 let serverlessHandler: serverless.Handler;

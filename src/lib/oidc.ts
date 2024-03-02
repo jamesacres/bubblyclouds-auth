@@ -16,6 +16,7 @@ import { logoutSource } from '../views/logoutSource';
 import { postLogoutSuccessSource } from '../views/postLogoutSuccessSource';
 
 export interface OidcOptions {
+  appConfig: object;
   issuer: string;
   keys: JWK[];
 }

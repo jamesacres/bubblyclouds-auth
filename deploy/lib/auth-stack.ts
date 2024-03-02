@@ -1,4 +1,9 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { Duration, Fn, Stack, StackProps } from 'aws-cdk-lib';
+import {
+  CfnApplication,
+  CfnConfigurationProfile,
+  CfnEnvironment,
+} from 'aws-cdk-lib/aws-appconfig';
 import {
   DomainName,
   EndpointType,
@@ -9,7 +14,7 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { AttributeType, ProjectionType, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import {
   NodejsFunction,
   NodejsFunctionProps,
@@ -18,11 +23,13 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 export interface AuthStackProps extends StackProps {
   certificateArn: string;
   domainName: string;
   subdomain: string;
+  appConfig: { applicationName: string; environmentName: string };
 }
 
 export class AuthStack extends Stack {
@@ -37,7 +44,12 @@ export class AuthStack extends Stack {
       subdomain,
     });
 
-    const { oidc, redirect } = this.lambdas();
+    const appConfig = this.appConfig(props.appConfig);
+    const { oidc, redirect } = this.lambdas({
+      appConfig,
+      accountId: props.env!.account!,
+      region: props.env!.region!,
+    });
 
     const { sigRSA } = this.secrets();
     sigRSA.grantRead(oidc.fn);
@@ -187,7 +199,44 @@ export class AuthStack extends Stack {
     return { table };
   }
 
-  private lambdas() {
+  private appConfig(options: AuthStackProps['appConfig']): {
+    application: CfnApplication;
+    environment: CfnEnvironment;
+    configuration: CfnConfigurationProfile;
+  } {
+    const application = new CfnApplication(this, `AuthAppConfigApplication`, {
+      name: options.applicationName,
+    });
+    const environment = new CfnEnvironment(this, 'AuthAppConfigEnvironment', {
+      applicationId: application.ref,
+      name: options.environmentName,
+    });
+    const configuration = new CfnConfigurationProfile(
+      this,
+      `AuthAppConfigConfigurationProfile`,
+      {
+        applicationId: application.ref,
+        locationUri: 'hosted',
+        name: options.environmentName,
+        type: 'AWS.Freeform',
+      }
+    );
+    return {
+      application,
+      environment,
+      configuration,
+    };
+  }
+
+  private lambdas(options: {
+    accountId: string;
+    region: string;
+    appConfig: {
+      application: CfnApplication;
+      environment: CfnEnvironment;
+      configuration: CfnConfigurationProfile;
+    };
+  }) {
     const config: NodejsFunctionProps = {
       handler: 'handler',
       memorySize: 128,
@@ -204,6 +253,24 @@ export class AuthStack extends Stack {
       functionName: `AuthRedirect`,
     });
 
+    const appConfigResource = Fn.sub(
+      'arn:aws:appconfig:${region}:${accountId}:application/${applicationId}/environment/${environmentId}/configuration/${configurationId}',
+      {
+        region: options.region,
+        accountId: options.accountId,
+        applicationId: options.appConfig.application.name,
+        environmentId: options.appConfig.environment.name,
+        configurationId: options.appConfig.configuration.name,
+      }
+    );
+    const appConfigDeploymentUri = Fn.sub(
+      '/applications/${applicationId}/environments/${environmentId}/configurations/${configurationId}',
+      {
+        applicationId: options.appConfig.application.name,
+        environmentId: options.appConfig.environment.name,
+        configurationId: options.appConfig.configuration.name,
+      }
+    );
     const oidcFn = new NodejsFunction(this, `AuthOidcFunction`, {
       ...config,
       entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
@@ -211,8 +278,26 @@ export class AuthStack extends Stack {
       environment: {
         DEBUG: 'oidc-provider:*',
         OAUTH_TABLE: 'AuthStack-AuthTable0711E62F-15KG9EHHEGFYW',
+        // https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions.html
+        AWS_APPCONFIG_EXTENSION_PREFETCH_LIST: appConfigDeploymentUri,
       },
+      layers: [
+        LayerVersion.fromLayerVersionArn(
+          this,
+          'AppConfigLambdaLayer',
+          'arn:aws:lambda:eu-west-2:282860088358:layer:AWS-AppConfig-Extension:93'
+        ),
+      ],
     });
+    oidcFn.addToRolePolicy(
+      new PolicyStatement({
+        resources: [appConfigResource],
+        actions: [
+          'appconfig:GetLatestConfiguration',
+          'appconfig:StartConfigurationSession',
+        ],
+      })
+    );
 
     return {
       redirect: {

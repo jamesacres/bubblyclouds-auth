@@ -12,6 +12,10 @@ test('Auth Stack', () => {
     certificateArn: 'mockCertificateArn',
     domainName: 'mockdomain.test',
     subdomain: 'mocksubdomain',
+    appConfig: {
+      applicationName: 'mockapplicationname',
+      environmentName: 'mockenvironmentname',
+    },
   });
   const template = Template.fromStack(authStack);
   expect(template.toJSON()).toMatchSnapshot();

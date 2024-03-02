@@ -26,4 +26,8 @@ new AuthStack(app, 'AuthStack', {
   certificateArn: process.env.CERTIFICATE_ARN,
   domainName: process.env.DOMAIN_NAME,
   subdomain: process.env.SUBDOMAIN,
+  appConfig: {
+    applicationName: 'bubblyclouds-auth',
+    environmentName: 'bubblyclouds-auth-prod',
+  },
 });
