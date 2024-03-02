@@ -18,5 +18,17 @@ test('Auth Stack', () => {
     },
   });
   const template = Template.fromStack(authStack);
-  expect(template.toJSON()).toMatchSnapshot();
+  const json = template.toJSON();
+  expect(json).toMatchSnapshot({
+    Resources: {
+      ...json.Resources,
+      AuthOidcFunctionFEAD1639: {
+        ...json.Resources.AuthOidcFunctionFEAD1639,
+        Properties: {
+          ...json.Resources.AuthOidcFunctionFEAD1639.Properties,
+          Code: { S3Key: expect.any(String) },
+        },
+      },
+    },
+  });
 });
