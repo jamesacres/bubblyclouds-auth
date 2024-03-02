@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Auth Service for Bubbly Clouds",
   "scripts": {
-    "start": "sam local start-api -t ./deploy/cdk.out/AuthStack.template.json",
+    "start": "npm --prefix ./deploy run cdk:synth && sam local start-api -t ./deploy/cdk.out/AuthStack.template.json",
     "start:ssl": "npx local-ssl-proxy --source 3001 --target 3000",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },

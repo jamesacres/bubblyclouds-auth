@@ -11,10 +11,12 @@ if (
     process.env.AWS_DEFAULT_REGION &&
     process.env.CERTIFICATE_ARN &&
     process.env.DOMAIN_NAME &&
-    process.env.SUBDOMAIN
+    process.env.SUBDOMAIN &&
+    process.env.APP_CONFIG_APPLICATION_NAME &&
+    ['dev', 'prod'].includes(process.env.ENV!)
   )
 ) {
-  throw Error('Missing env');
+  throw Error('Missing env, use npm run cdk:xxx and populate .env');
 }
 
 const app = new cdk.App();
@@ -27,7 +29,7 @@ new AuthStack(app, 'AuthStack', {
   domainName: process.env.DOMAIN_NAME,
   subdomain: process.env.SUBDOMAIN,
   appConfig: {
-    applicationName: 'bubblyclouds-auth',
-    environmentName: 'bubblyclouds-auth-prod',
+    applicationName: process.env.APP_CONFIG_APPLICATION_NAME,
+    environmentName: `${process.env.APP_CONFIG_APPLICATION_NAME}-${process.env.ENV}`,
   },
 });
