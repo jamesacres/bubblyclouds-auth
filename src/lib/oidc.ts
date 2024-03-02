@@ -31,6 +31,7 @@ const initProvider = ({
     clients,
     adapter: DynamoDBAdapter,
     jwks: { keys },
+    scopes: ['openid', 'offline_access'],
     claims: {
       // requesting a scope will return the mapped claims
       address: ['address'],
@@ -185,6 +186,17 @@ const initProvider = ({
       }
 
       return undefined;
+    },
+    issueRefreshToken: (ctx, client, code) => {
+      if (!client.grantTypeAllowed('refresh_token')) {
+        return false;
+      }
+      return (
+        code.scopes.has('offline_access') ||
+        // We always want to return refresh_token to web clients
+        // This is required so we don't need prompt=consent and a consent view implemented
+        (client.applicationType === 'web' && client.clientAuthMethod === 'none')
+      );
     },
   };
 
