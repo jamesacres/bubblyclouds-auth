@@ -253,24 +253,6 @@ export class AuthStack extends Stack {
       functionName: `AuthRedirect`,
     });
 
-    const appConfigResource = Fn.sub(
-      'arn:aws:appconfig:${region}:${accountId}:application/${applicationId}/environment/${environmentId}/configuration/${configurationId}',
-      {
-        region: options.region,
-        accountId: options.accountId,
-        applicationId: options.appConfig.application.name,
-        environmentId: options.appConfig.environment.name,
-        configurationId: options.appConfig.configuration.name,
-      }
-    );
-    const appConfigDeploymentUri = Fn.sub(
-      '/applications/${applicationId}/environments/${environmentId}/configurations/${configurationId}',
-      {
-        applicationId: options.appConfig.application.name,
-        environmentId: options.appConfig.environment.name,
-        configurationId: options.appConfig.configuration.name,
-      }
-    );
     const oidcFn = new NodejsFunction(this, `AuthOidcFunction`, {
       ...config,
       entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
@@ -279,7 +261,14 @@ export class AuthStack extends Stack {
         DEBUG: 'oidc-provider:*',
         OAUTH_TABLE: 'AuthStack-AuthTable0711E62F-15KG9EHHEGFYW',
         // https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions.html
-        AWS_APPCONFIG_EXTENSION_PREFETCH_LIST: appConfigDeploymentUri,
+        AWS_APPCONFIG_EXTENSION_PREFETCH_LIST: Fn.sub(
+          '/applications/${applicationId}/environments/${environmentId}/configurations/${configurationId}',
+          {
+            applicationId: options.appConfig.application.name,
+            environmentId: options.appConfig.environment.name,
+            configurationId: options.appConfig.configuration.name,
+          }
+        ),
       },
       layers: [
         LayerVersion.fromLayerVersionArn(
@@ -291,7 +280,18 @@ export class AuthStack extends Stack {
     });
     oidcFn.addToRolePolicy(
       new PolicyStatement({
-        resources: [appConfigResource],
+        resources: [
+          Fn.sub(
+            'arn:aws:appconfig:${region}:${accountId}:application/${applicationId}/environment/${environmentId}/configuration/${configurationId}',
+            {
+              region: options.region,
+              accountId: options.accountId,
+              applicationId: options.appConfig.application.ref,
+              environmentId: options.appConfig.environment.ref,
+              configurationId: options.appConfig.configuration.ref,
+            }
+          ),
+        ],
         actions: [
           'appconfig:GetLatestConfiguration',
           'appconfig:StartConfigurationSession',
