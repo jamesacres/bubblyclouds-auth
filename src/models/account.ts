@@ -4,24 +4,32 @@ import {
   type Account as AccountInterface,
   type FindAccount,
 } from 'oidc-provider';
-import { IdTokenClaims, UserinfoResponse } from 'openid-client';
+import { IdTokenClaims } from 'openid-client';
 import { nanoid } from 'nanoid';
+import { DynamoDBAdapter } from '../adapters/dynamodb';
+import { Model } from '../adapters/types/Model';
+import { BubblyUserProfile } from '../adapters/types/BubblyUserProfile';
 
 export enum UserStore {
   GOOGLE = 'google',
 }
 
 export class Account implements AccountInterface {
+  private static adapter = new DynamoDBAdapter(Model.BubblyUser);
+
   constructor(
     public accountId: string,
-    private profile?: UserinfoResponse
+    private profile?: BubblyUserProfile
   ) {}
   [key: string]: unknown;
 
   async claims(): Promise<AccountClaims> {
     if (!this.profile) {
-      // TODO lookup account from database
-      // TODO set this.profile to their claims
+      const user = await Account.adapter.find(this.accountId);
+      if (!user) {
+        throw new errors.UnknownUserId();
+      }
+      this.profile = user.profile;
     }
     return {
       ...this.profile,
@@ -30,19 +38,12 @@ export class Account implements AccountInterface {
   }
 
   static async findByFederated(provider: UserStore, claims: IdTokenClaims) {
-    if (!(claims.sub, claims.email && claims.email_verified)) {
+    if (!(claims.sub && claims.email && claims.email_verified)) {
       // All federated accounts require a verified email
       throw new errors.InvalidToken('account not found');
     }
 
-    // TODO lookup user by email in our database
-    // TODO If we haven't seen the email before, store in our database
-    // TODO If we have seen the email before, update any fields with the new information
-
-    const accountId = `bubblyclouds|${nanoid()}`;
-
-    const profile = {
-      sub: accountId,
+    const profile: Omit<BubblyUserProfile, 'sub'> = {
       name: claims.name,
       given_name: claims.given_name,
       family_name: claims.family_name,
@@ -63,7 +64,16 @@ export class Account implements AccountInterface {
       address: claims.address,
     };
 
-    return new Account(accountId, profile);
+    const user = await Account.adapter.findByUid(claims.email);
+
+    // Update existing user, or store new user
+    const sub: string = user?.profile?.sub || `bubblyclouds|${nanoid()}`;
+    await Account.adapter.upsert(sub, {
+      uid: claims.email,
+      profile: { ...profile, sub },
+    });
+
+    return new Account(sub, { ...profile, sub });
   }
 
   static findAccount(): FindAccount {

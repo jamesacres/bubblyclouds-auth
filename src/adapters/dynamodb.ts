@@ -40,7 +40,7 @@
 // Author: Sachin Shekhar <https://github.com/SachinShekhar>
 // Mention @SachinShekhar in issues to ask questions about this code.
 
-import { Adapter, AdapterPayload } from 'oidc-provider';
+import { Adapter } from 'oidc-provider';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   BatchWriteCommand,
@@ -57,6 +57,8 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 import { backOff } from 'exponential-backoff';
+import { Model } from './types/Model';
+import { BubblyAdapterPayload } from './types/BubblyAdapterPayload';
 
 const TABLE_NAME = process.env.OAUTH_TABLE!;
 const TABLE_REGION = process.env.AWS_REGION;
@@ -74,15 +76,15 @@ const dynamoClient = DynamoDBDocumentClient.from(
 );
 
 export class DynamoDBAdapter implements Adapter {
-  name: string;
+  name: string | Model;
 
-  constructor(name: string) {
+  constructor(name: string | Model) {
     this.name = name;
   }
 
   async upsert(
     id: string,
-    payload: AdapterPayload,
+    payload: BubblyAdapterPayload,
     expiresIn?: number
   ): Promise<void> {
     // DynamoDB can recognise TTL values only in seconds
@@ -112,7 +114,7 @@ export class DynamoDBAdapter implements Adapter {
     await dynamoClient.send(command);
   }
 
-  async find(id: string): Promise<AdapterPayload | undefined> {
+  async find(id: string): Promise<BubblyAdapterPayload | undefined> {
     const params: GetCommandInput = {
       TableName: TABLE_NAME,
       Key: { modelId: this.name + '-' + id },
@@ -123,7 +125,7 @@ export class DynamoDBAdapter implements Adapter {
     const getResult = async () => {
       const commandResult = await dynamoClient.send(command);
       const result = commandResult?.Item as
-        | { payload: AdapterPayload; expiresAt?: number }
+        | { payload: BubblyAdapterPayload; expiresAt?: number }
         | undefined;
       if (!result) {
         throw Error('not found');
@@ -147,7 +149,9 @@ export class DynamoDBAdapter implements Adapter {
     return result.payload;
   }
 
-  async findByUserCode(userCode: string): Promise<AdapterPayload | undefined> {
+  async findByUserCode(
+    userCode: string
+  ): Promise<BubblyAdapterPayload | undefined> {
     const params: QueryCommandInput = {
       TableName: TABLE_NAME,
       IndexName: 'userCodeIndex',
@@ -163,7 +167,7 @@ export class DynamoDBAdapter implements Adapter {
     const getResult = async () => {
       const commandResult = await dynamoClient.send(command);
       const result = commandResult?.Items?.[0] as
-        | { payload: AdapterPayload; expiresAt?: number }
+        | { payload: BubblyAdapterPayload; expiresAt?: number }
         | undefined;
       if (!result) {
         throw Error('not found');
@@ -187,7 +191,7 @@ export class DynamoDBAdapter implements Adapter {
     return result.payload;
   }
 
-  async findByUid(uid: string): Promise<AdapterPayload | undefined> {
+  async findByUid(uid: string): Promise<BubblyAdapterPayload | undefined> {
     const params: QueryCommandInput = {
       TableName: TABLE_NAME,
       IndexName: 'uidIndex',
@@ -203,7 +207,7 @@ export class DynamoDBAdapter implements Adapter {
     const getResult = async () => {
       const commandResult = await dynamoClient.send(command);
       const result = commandResult?.Items?.[0] as
-        | { payload: AdapterPayload; expiresAt?: number }
+        | { payload: BubblyAdapterPayload; expiresAt?: number }
         | undefined;
       if (!result) {
         throw Error('not found');
