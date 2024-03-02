@@ -1,4 +1,4 @@
-import { ClientMetadata } from 'oidc-provider';
+import { ClientMetadata, ResourceServer } from 'oidc-provider';
 
 export interface AppConfig {
   serverUrl: string;
@@ -6,6 +6,12 @@ export interface AppConfig {
   federatedClients: {
     google: {
       clientId: string;
+    };
+  };
+  resources: {
+    [key: string]: {
+      allowedClientIds: string[];
+      config?: Partial<ResourceServer>;
     };
   };
 }

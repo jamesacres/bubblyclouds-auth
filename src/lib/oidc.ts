@@ -20,17 +20,8 @@ const defaultResource: ResourceServer = {
   accessTokenFormat: 'jwt',
 };
 
-const resources: {
-  [key: string]: {
-    allowedClientIds: string[];
-    config?: Partial<ResourceServer>;
-  };
-} = {
-  'https://bubbly-sudoku.com': { allowedClientIds: ['bubbly-sudoku'] },
-};
-
 const initProvider = ({
-  appConfig: { clients, serverUrl, federatedClients },
+  appConfig: { clients, serverUrl, federatedClients, resources },
   keys,
   issuer,
 }: OidcOptions) => {
