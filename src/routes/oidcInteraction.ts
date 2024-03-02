@@ -4,8 +4,9 @@ import { koaBody as bodyParser } from 'koa-body';
 import Router from 'koa-router';
 import { getGoogleClient } from '../lib/google';
 import { Client } from 'openid-client';
+import { OAuth2Client as GoogleOAuth2Client } from 'google-auth-library';
 import { Account, UserStore } from '../models/account';
-import Provider from 'oidc-provider';
+import Provider, { errors } from 'oidc-provider';
 import { constants } from 'http2';
 import { render } from 'ejs';
 import { repost } from '../views/repost';
@@ -111,18 +112,30 @@ export const oidcInteraction = (
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('google.nonce', null, { path: thisPath });
 
-      // TODO verify using Google's library?
-      const tokenset = await (
-        await googleClient()
-      ).callback(undefined, callbackParams, {
-        nonce,
-        state: ctx.params.uid,
-        response_type: 'id_token',
-      });
+      const getIdTokenClaims = async () => {
+        try {
+          const tokenset = await (
+            await googleClient()
+          ).callback(undefined, callbackParams, {
+            nonce,
+            state: ctx.params.uid,
+            response_type: 'id_token',
+          });
+          const googleOAuth2Client = new GoogleOAuth2Client();
+          await googleOAuth2Client.verifyIdToken({
+            idToken: tokenset.id_token!,
+            audience: federatedClients.google.clientId,
+          });
+          return tokenset.claims();
+        } catch (e) {
+          console.error(e);
+          throw new errors.InvalidToken('invalid google id_token');
+        }
+      };
 
       const account = await Account.findByFederated(
         UserStore.GOOGLE,
-        tokenset.claims()
+        await getIdTokenClaims()
       );
 
       return provider.interactionFinished(
