@@ -67,10 +67,14 @@ export class Account implements AccountInterface {
     const user = await Account.adapter.findByUid(claims.email);
 
     // Update existing user, or store new user
+    const now = new Date();
     const sub: string = user?.profile?.sub || `bubblyclouds|${nanoid()}`;
+    const createdAt: Date = new Date(user?.createdAt || now);
     await Account.adapter.upsert(sub, {
       uid: claims.email,
       profile: { ...profile, sub },
+      createdAt: createdAt.toISOString(),
+      updatedAt: now.toISOString(),
     });
 
     return new Account(sub, { ...profile, sub });
