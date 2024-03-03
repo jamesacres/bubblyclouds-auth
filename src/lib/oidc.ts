@@ -21,14 +21,28 @@ const defaultResource: ResourceServer = {
 };
 
 const initProvider = ({
-  appConfig: { clients, serverUrl, federatedClients, resources },
+  appConfig: { clients, cookies, serverUrl, federatedClients, resources },
   keys,
   issuer,
 }: OidcOptions) => {
   console.info('initProvider');
   const configuration: Configuration = {
-    // TODO configure cookies
     clients,
+    cookies: {
+      keys: cookies.secretKeys,
+      long: {
+        httpOnly: true,
+        overwrite: true,
+        sameSite: 'none',
+        signed: true,
+      },
+      short: {
+        httpOnly: true,
+        overwrite: true,
+        sameSite: 'lax',
+        signed: true,
+      },
+    },
     adapter: DynamoDBAdapter,
     jwks: { keys },
     scopes: ['openid', 'offline_access'],
