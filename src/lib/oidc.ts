@@ -145,12 +145,19 @@ const initProvider = ({
           !token.isSenderConstrained()
         ) {
           // Non-Sender Constrained SPA RefreshTokens do not have infinite expiration through rotation
+          // This means when rotated the new refresh token expires on the same day as previous rather than extending
+          // Because the client has no secret and is public
           return ctx.oidc.entities.RotatedRefreshToken.remainingTTL;
         }
 
-        return 14 * 24 * 60 * 60; // 14 days in seconds
+        return 14 * 24 * 60 * 60; // 14 days in seconds, after which the user will need to redirect via the login flow again
       },
-      Session: 1209600 /* 14 days in seconds */,
+      Session: 1 * 24 * 60 * 60, // 1 day in seconds, we also set remember: false so it ends with browser session, we don't mind user reauthentication as we redirect to third party to refresh their profile anyway
+    },
+    expiresWithSession: () => {
+      // return !code.scopes.has('offline_access');
+      // We don't want web tokens to expire when their cookie session does, so this is disabled
+      return false;
     },
     loadExistingGrant: async (ctx) => {
       const grantId =
