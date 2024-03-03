@@ -9,10 +9,7 @@ import { nanoid } from 'nanoid';
 import { DynamoDBAdapter } from '../adapters/dynamodb';
 import { Model } from '../types/Model';
 import { BubblyUserProfile } from '../types/BubblyUserProfile';
-
-export enum UserStore {
-  GOOGLE = 'google',
-}
+import { FederatedProvider } from '../types/FederatedProvider';
 
 export class Account implements AccountInterface {
   private static adapter = new DynamoDBAdapter(Model.BubblyUser);
@@ -37,7 +34,10 @@ export class Account implements AccountInterface {
     };
   }
 
-  static async findByFederated(provider: UserStore, claims: IdTokenClaims) {
+  static async findByFederated(
+    federatedProvider: FederatedProvider,
+    claims: IdTokenClaims
+  ) {
     if (!(claims.sub && claims.email && claims.email_verified)) {
       // All federated accounts require a verified email
       throw new errors.InvalidToken('account not found');
@@ -71,6 +71,7 @@ export class Account implements AccountInterface {
     const sub: string = user?.profile?.sub || `bubblyclouds|${nanoid()}`;
     const createdAt: Date = new Date(user?.createdAt || now);
     await Account.adapter.upsert(sub, {
+      federatedProvider,
       uid: claims.email,
       profile: { ...profile, sub },
       createdAt: createdAt.toISOString(),

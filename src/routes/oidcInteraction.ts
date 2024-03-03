@@ -5,7 +5,8 @@ import Router from 'koa-router';
 import { getGoogleClient } from '../lib/google';
 import { Client } from 'openid-client';
 import { OAuth2Client as GoogleOAuth2Client } from 'google-auth-library';
-import { Account, UserStore } from '../models/account';
+import { Account } from '../models/account';
+import { FederatedProvider } from '../types/FederatedProvider';
 import Provider, { errors } from 'oidc-provider';
 import { constants } from 'http2';
 import { render } from 'ejs';
@@ -109,13 +110,13 @@ export const oidcInteraction = (
     ctx.response.body = render(repost, {
       nonce,
       layout: false,
-      upstream: 'google',
+      upstream: FederatedProvider.GOOGLE,
     });
   });
 
   router.post('/interaction/:uid/federated', body, async (ctx) => {
     // callback from repost
-    if (ctx.request.body?.upstream === 'google') {
+    if (ctx.request.body?.upstream === FederatedProvider.GOOGLE) {
       const callbackParams = (await googleClient()).callbackParams(ctx.req);
       const nonce = ctx.cookies.get('google.nonce');
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
@@ -143,7 +144,7 @@ export const oidcInteraction = (
       };
 
       const account = await Account.findByFederated(
-        UserStore.GOOGLE,
+        FederatedProvider.GOOGLE,
         await getIdTokenClaims()
       );
 
