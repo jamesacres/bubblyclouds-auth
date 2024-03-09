@@ -75,6 +75,10 @@ export class AuthStack extends Stack {
     // GET /oidc
     oidcResource.addMethod('GET', redirect.integration);
 
+    // GET /oidc/jwks
+    const oidcJwksResource = oidcResource.addResource('jwks');
+    oidcJwksResource.addMethod('GET', oidc.integration);
+
     const authResource = oidcResource.addResource('auth');
     // GET /oidc/auth
     authResource.addMethod('GET', oidc.integration);
