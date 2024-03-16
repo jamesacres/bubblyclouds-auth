@@ -203,7 +203,6 @@ const initProvider = ({
         const scope =
           resources[resource]?.clientIdScope?.[ctx.oidc.client.clientId] ||
           'openid';
-        console.info('axxxx', scope);
         grant.addResourceScope(resource, scope);
         await grant.save();
         return grant;
