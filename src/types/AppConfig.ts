@@ -12,6 +12,9 @@ export interface AppConfig {
   resources: {
     [key: string]: {
       allowedClientIds: string[];
+      clientIdScope?: {
+        [clientId: string]: string;
+      };
       config?: Partial<ResourceServer>;
     };
   };

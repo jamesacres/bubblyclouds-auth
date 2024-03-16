@@ -200,7 +200,10 @@ const initProvider = ({
         const resource = ctx.oidc.params?.resource
           ? <string>ctx.oidc.params?.resource
           : `https://${ctx.oidc.client.clientId}`;
-        const scope = resources[resource]?.config?.scope || 'openid';
+        const scope =
+          resources[resource]?.clientIdScope?.[ctx.oidc.client.clientId] ||
+          'openid';
+        console.info('axxxx', scope);
         grant.addResourceScope(resource, scope);
         await grant.save();
         return grant;
