@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.521.0",
-    "@aws-sdk/client-secrets-manager": "^3.521.0",
     "@aws-sdk/lib-dynamodb": "^3.521.0",
     "ejs": "^3.1.9",
     "exponential-backoff": "^3.1.1",
