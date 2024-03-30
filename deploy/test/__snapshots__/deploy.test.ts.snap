@@ -2163,14 +2163,24 @@ exports[`Auth Stack 1`] = `
             "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
             "DEBUG": "oidc-provider:*",
             "OAUTH_TABLE": "AuthStack-AuthTable0711E62F-15KG9EHHEGFYW",
+            "PARAMETERS_SECRETS_EXTENSION_CACHE_ENABLED": "true",
+            "PARAMETERS_SECRETS_EXTENSION_CACHE_SIZE": "1000",
+            "PARAMETERS_SECRETS_EXTENSION_HTTP_PORT": "2773",
+            "PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL": "debug",
+            "PARAMETERS_SECRETS_EXTENSION_MAX_CONNECTIONS": "3",
+            "SECRETS_MANAGER_TIMEOUT_MILLIS": "0",
+            "SECRETS_MANAGER_TTL": "300",
+            "SSM_PARAMETER_STORE_TIMEOUT_MILLIS": "0",
+            "SSM_PARAMETER_STORE_TTL": "300",
           },
         },
         "FunctionName": "AuthOidc",
         "Handler": "index.handler",
         "Layers": [
           "arn:aws:lambda:eu-west-2:282860088358:layer:AWS-AppConfig-Extension:93",
+          "arn:aws:lambda:eu-west-2:133256977650:layer:AWS-Parameters-and-Secrets-Lambda-Extension:4",
         ],
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AuthOidcFunctionServiceRole7F4533CF",
@@ -2342,7 +2352,7 @@ exports[`Auth Stack 1`] = `
         },
         "FunctionName": "AuthRedirect",
         "Handler": "index.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AuthRedirectFunctionServiceRoleF183DD8A",

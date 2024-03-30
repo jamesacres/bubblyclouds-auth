@@ -249,7 +249,7 @@ export class AuthStack extends Stack {
   }) {
     const config: NodejsFunctionProps = {
       handler: 'handler',
-      memorySize: 128,
+      memorySize: 512,
       environment: {},
       runtime: Runtime.NODEJS_20_X,
       timeout: Duration.seconds(15),
