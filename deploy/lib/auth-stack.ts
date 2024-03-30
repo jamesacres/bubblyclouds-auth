@@ -249,7 +249,7 @@ export class AuthStack extends Stack {
   }) {
     const config: NodejsFunctionProps = {
       handler: 'handler',
-      memorySize: 512,
+      memorySize: 128,
       environment: {},
       runtime: Runtime.NODEJS_20_X,
       timeout: Duration.seconds(15),
@@ -273,6 +273,7 @@ export class AuthStack extends Stack {
     const oidcFn = new NodejsFunction(this, `AuthOidcFunction`, {
       ...config,
       paramsAndSecrets,
+      memorySize: 512,
       entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
       functionName: `AuthOidc`,
       environment: {

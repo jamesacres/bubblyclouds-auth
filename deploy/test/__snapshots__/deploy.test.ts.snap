@@ -2352,7 +2352,7 @@ exports[`Auth Stack 1`] = `
         },
         "FunctionName": "AuthRedirect",
         "Handler": "index.handler",
-        "MemorySize": 512,
+        "MemorySize": 128,
         "Role": {
           "Fn::GetAtt": [
             "AuthRedirectFunctionServiceRoleF183DD8A",
