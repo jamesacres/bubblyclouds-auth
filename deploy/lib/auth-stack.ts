@@ -14,7 +14,13 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { AttributeType, ProjectionType, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
+import {
+  LayerVersion,
+  ParamsAndSecretsLayerVersion,
+  ParamsAndSecretsLogLevel,
+  ParamsAndSecretsVersions,
+  Runtime,
+} from 'aws-cdk-lib/aws-lambda';
 import {
   NodejsFunction,
   NodejsFunctionProps,
@@ -247,7 +253,9 @@ export class AuthStack extends Stack {
       environment: {},
       runtime: Runtime.NODEJS_20_X,
       timeout: Duration.seconds(15),
-      bundling: {},
+      bundling: {
+        externalModules: ['@aws-sdk/*'],
+      },
       logRetention: RetentionDays.ONE_WEEK,
     };
 
@@ -257,8 +265,14 @@ export class AuthStack extends Stack {
       functionName: `AuthRedirect`,
     });
 
+    const paramsAndSecrets = ParamsAndSecretsLayerVersion.fromVersion(
+      ParamsAndSecretsVersions.V1_0_103,
+      { logLevel: ParamsAndSecretsLogLevel.DEBUG }
+    );
+
     const oidcFn = new NodejsFunction(this, `AuthOidcFunction`, {
       ...config,
+      paramsAndSecrets,
       entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
       functionName: `AuthOidc`,
       environment: {
