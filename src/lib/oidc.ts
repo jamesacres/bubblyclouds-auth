@@ -20,6 +20,21 @@ const defaultResource: ResourceServer = {
   accessTokenFormat: 'jwt',
 };
 
+// https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
+const corsProp = 'urn:custom:client:allowed-cors-origins';
+const isOrigin = (value) => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  try {
+    const { origin } = new URL(value);
+    // Origin: <scheme> "://" <hostname> [ ":" <port> ]
+    return value === origin;
+  } catch (err) {
+    return false;
+  }
+};
+
 const initProvider = ({
   appConfig: { clients, cookies, serverUrl, federatedClients, resources },
   keys,
@@ -28,6 +43,30 @@ const initProvider = ({
   console.info('initProvider');
   const configuration: Configuration = {
     clients,
+    extraClientMetadata: {
+      properties: [corsProp],
+      validator(ctx, key, value, metadata) {
+        if (key === corsProp) {
+          // set default (no CORS)
+          if (value === undefined) {
+            metadata[corsProp] = [];
+            return;
+          }
+          // validate an array of Origin strings
+          if (!Array.isArray(value) || !value.every(isOrigin)) {
+            throw new errors.InvalidClientMetadata(
+              `${corsProp} must be an array of origins`
+            );
+          }
+        }
+      },
+    },
+    clientBasedCORS(ctx, origin, client) {
+      // ctx.oidc.route can be used to exclude endpoints from this behaviour, in that case just return
+      // true to always allow CORS on them, false to deny
+      // you may also allow some known internal origins if you want to
+      return (client[corsProp] as string[]).includes(origin);
+    },
     cookies: {
       keys: cookies.secretKeys,
       long: {
