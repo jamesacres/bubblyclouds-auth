@@ -171,7 +171,7 @@ const initProvider = ({
     },
     ttl: {
       AccessToken: function AccessTokenTTL(ctx, token) {
-        return token.resourceServer?.accessTokenTTL || 60 * 60 * 12; // 12 hours in seconds
+        return token.resourceServer?.accessTokenTTL || 60 * 60 * 2; // 2 hours in seconds
       },
       AuthorizationCode: 60 * 5 /* 5 minutes in seconds */,
       BackchannelAuthenticationRequest:
@@ -205,7 +205,7 @@ const initProvider = ({
 
         return 14 * 24 * 60 * 60; // 14 days in seconds, after which the user will need to redirect via the login flow again
       },
-      Session: 1 * 24 * 60 * 60, // 1 day in seconds, we also set remember: false so it ends with browser session, we don't mind user reauthentication as we redirect to third party to refresh their profile anyway
+      Session: 30 * 24 * 60 * 60, // 30 days in seconds, we also set remember: true so it doesn't end with browser session to reduce need to re-prompt
     },
     expiresWithSession: () => {
       // return !code.scopes.has('offline_access');

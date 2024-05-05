@@ -154,7 +154,7 @@ export const oidcInteraction = (
         {
           login: {
             accountId: account.accountId,
-            remember: false, // closing and reopening browser forces new login
+            remember: true, // closing and reopening browser does not force new login
           },
         },
         {
