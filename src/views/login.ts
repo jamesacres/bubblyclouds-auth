@@ -10,16 +10,20 @@ export const login = `<!DOCTYPE html>
   
         body {
           font-family: 'Roboto', sans-serif;
-          margin-top: 25px;
-          margin-bottom: 25px;
-          background-color: rgb(17, 24, 39);
-          color: rgb(17, 24, 39);
+          margin: 0;
+          background-color: rgb(0, 0, 0);
+          color: rgb(0, 0, 0);
           text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          flex-direction: column;
         }
 
         .logo {
-          width: 100%;
-          margin-top: 20px;
+          width: 274px;
+          margin: 20px;
         }
   
         .login-card {
@@ -123,8 +127,8 @@ export const login = `<!DOCTYPE html>
       </style>
     </head>
     <body>
+      <img src="https://bubblyclouds.com/bubbly-clouds.png" class="logo">
       <div class="login-card">
-        <img src="https://bubblyclouds.com/static/img/bubbly-clouds-invert.png" class="logo">
         <h1><%= client.clientName %></h1>
         <a href="/oidc/interaction/<%= uid %>/federated/google" class="google-button">
           <span class="google-button__icon">
@@ -133,13 +137,9 @@ export const login = `<!DOCTYPE html>
           <span class="google-button__text">Sign in with Google</span>
         </a>
         <div class="login-help">
-          <a href="/oidc/interaction/<%= uid %>/abort">Cancel</a>
-          <% if (client.tosUri) { %>
-            <a href="<%= client.tosUri %>">Terms of Service</a>
-          <% } %>
-          <% if (client.policyUri) { %>
-            <a href="<%= client.policyUri %>">Privacy Policy</a>
-          <% } %>
+          <a href="/oidc/interaction/<%= uid %>/abort">Cancel</a> | 
+          <a href="https://bubblyclouds.com/terms" target="_blank">Terms of Service</a> | 
+          <a href="https://bubblyclouds.com/privacy" target="_blank">Privacy Policy</a>
         </div>
       </div>
     </body>

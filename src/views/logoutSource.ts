@@ -127,7 +127,7 @@ export const logoutSource = (ctx: KoaContextWithOIDC, form: string) => {
     </head>
     <body>
       <div class="login-card">
-        <img src="https://bubblyclouds.com/static/img/bubbly-clouds-invert.png" class="logo">
+        <img src="https://bubblyclouds.com/bubbly-clouds-invert.png" class="logo">
         <h1>Do you want to sign-out?</h1>
         ${form}
         <button autofocus type="submit" form="op.logoutForm" value="yes" name="logout">Yes, sign me out</button>
