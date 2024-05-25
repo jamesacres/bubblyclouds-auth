@@ -13,16 +13,20 @@ export const logoutSource = (ctx: KoaContextWithOIDC, form: string) => {
   
         body {
           font-family: 'Roboto', sans-serif;
-          margin-top: 25px;
-          margin-bottom: 25px;
-          background-color: rgb(17, 24, 39);
-          color: rgb(17, 24, 39);
+          margin: 0;
+          background-color: rgb(0, 0, 0);
+          color: rgb(0, 0, 0);
           text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          flex-direction: column;
         }
 
         .logo {
-          width: 100%;
-          margin-top: 20px;
+          width: 274px;
+          margin: 20px;
         }
   
         .login-card {
@@ -126,8 +130,8 @@ export const logoutSource = (ctx: KoaContextWithOIDC, form: string) => {
       </style>
     </head>
     <body>
+    <img src="https://bubblyclouds.com/bubbly-clouds.png" class="logo">
       <div class="login-card">
-        <img src="https://bubblyclouds.com/bubbly-clouds-invert.png" class="logo">
         <h1>Do you want to sign-out?</h1>
         ${form}
         <button autofocus type="submit" form="op.logoutForm" value="yes" name="logout">Yes, sign me out</button>
