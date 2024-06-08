@@ -261,9 +261,11 @@ const initProvider = ({
       }
       return (
         code.scopes.has('offline_access') ||
-        // We always want to return refresh_token to web clients
+        // We always want to return refresh_token to web/native clients
         // This is required so we don't need prompt=consent and a consent view implemented
-        (client.applicationType === 'web' && client.clientAuthMethod === 'none')
+        (!!client.applicationType &&
+          ['web', 'native'].includes(client.applicationType) &&
+          client.clientAuthMethod === 'none')
       );
     },
   };
