@@ -4,6 +4,7 @@ import Provider, {
   KoaContextWithOIDC,
   ResourceServer,
   errors,
+  interactionPolicy,
 } from 'oidc-provider';
 import { oidcInteraction } from '../routes/oidcInteraction';
 import { Account } from '../models/account';
@@ -153,6 +154,23 @@ const initProvider = ({
     },
     findAccount: Account.findAccount(),
     interactions: {
+      policy: (() => {
+        const policy = interactionPolicy.base();
+        const consentPolicy = policy.get('consent');
+
+        if (consentPolicy) {
+          // Skip forcing native clients to interact, also see loadExistingGrant for skipping consent
+          const nativePrompt = consentPolicy.checks.get('native_client_prompt');
+          if (nativePrompt) {
+            nativePrompt.check = () => {
+              console.warn('Skipping native_client_prompt');
+              return false;
+            };
+          }
+        }
+
+        return policy;
+      })(),
       url(_ctx, interaction) {
         return `/oidc/interaction/${interaction.uid}`;
       },
