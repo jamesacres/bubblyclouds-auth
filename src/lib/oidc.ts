@@ -22,18 +22,6 @@ const defaultResource: ResourceServer = {
 
 // https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
 const corsProp = 'urn:custom:client:allowed-cors-origins';
-const isOrigin = (value) => {
-  if (typeof value !== 'string') {
-    return false;
-  }
-  try {
-    const { origin } = new URL(value);
-    // Origin: <scheme> "://" <hostname> [ ":" <port> ]
-    return value === origin;
-  } catch (err) {
-    return false;
-  }
-};
 
 const initProvider = ({
   appConfig: { clients, cookies, serverUrl, federatedClients, resources },
@@ -53,7 +41,7 @@ const initProvider = ({
             return;
           }
           // validate an array of Origin strings
-          if (!Array.isArray(value) || !value.every(isOrigin)) {
+          if (!Array.isArray(value)) {
             throw new errors.InvalidClientMetadata(
               `${corsProp} must be an array of origins`
             );
