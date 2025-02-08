@@ -14,7 +14,7 @@ import { repost } from '../views/repost';
 import { AppConfig } from '../types/AppConfig';
 import { login } from '../views/login';
 import { getAppleClient } from '../lib/apple';
-import { sign } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 export const oidcInteraction = (
   provider: Provider,
@@ -37,7 +37,7 @@ export const oidcInteraction = (
   };
   const appleClient = async () => {
     if (!_appleClient) {
-      const clientSecret = sign(
+      const clientSecret = jwt.sign(
         {
           iss: federatedClients.apple.teamId,
           aud: 'https://appleid.apple.com',

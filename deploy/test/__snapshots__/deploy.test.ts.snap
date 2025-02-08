@@ -147,7 +147,7 @@ exports[`Auth Stack 1`] = `
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
     },
-    "AuthGatewayDeploymentE35D8D6064665f618f045c721e3bcfa1bd39afa2": {
+    "AuthGatewayDeploymentE35D8D60764b7be157a2c372fc01e7936576262b": {
       "DependsOn": [
         "AuthGatewaywellknownopenidconfigurationGET6F01C5D5",
         "AuthGatewaywellknownopenidconfiguration457368A3",
@@ -164,12 +164,16 @@ exports[`Auth Stack 1`] = `
         "AuthGatewayoidcinteractionuidabort9BBBE649",
         "AuthGatewayoidcinteractionuidconfirmPOST35D61924",
         "AuthGatewayoidcinteractionuidconfirm0B247DBB",
+        "AuthGatewayoidcinteractionuidfederatedappleGET9B35746B",
+        "AuthGatewayoidcinteractionuidfederatedapple745C3DAD",
         "AuthGatewayoidcinteractionuidfederatedgoogleGET3D6B5AB7",
         "AuthGatewayoidcinteractionuidfederatedgoogle63999E6D",
         "AuthGatewayoidcinteractionuidfederatedPOST46752891",
         "AuthGatewayoidcinteractionuidfederatedC2057843",
         "AuthGatewayoidcinteractionuidGET40993B29",
         "AuthGatewayoidcinteractionuidAD2647D5",
+        "AuthGatewayoidcinteractioncallbackapplePOST57CCAD46",
+        "AuthGatewayoidcinteractioncallbackappleE12D7D1B",
         "AuthGatewayoidcinteractioncallbackgoogleGETFE5B84AF",
         "AuthGatewayoidcinteractioncallbackgoogleAC19D52D",
         "AuthGatewayoidcinteractioncallbackE211EC11",
@@ -201,7 +205,7 @@ exports[`Auth Stack 1`] = `
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "AuthGatewayDeploymentE35D8D6064665f618f045c721e3bcfa1bd39afa2",
+          "Ref": "AuthGatewayDeploymentE35D8D60764b7be157a2c372fc01e7936576262b",
         },
         "MethodSettings": [
           {
@@ -791,6 +795,116 @@ exports[`Auth Stack 1`] = `
       },
       "Type": "AWS::ApiGateway::Resource",
     },
+    "AuthGatewayoidcinteractioncallbackappleE12D7D1B": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteractioncallbackE211EC11",
+        },
+        "PathPart": "apple",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractioncallbackapplePOST57CCAD46": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractioncallbackappleE12D7D1B",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractioncallbackapplePOSTApiPermissionAuthStackAuthGateway1EA58262POSToidcinteractioncallbackappleEAFB1F0D": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/POST/oidc/interaction/callback/apple",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractioncallbackapplePOSTApiPermissionTestAuthStackAuthGateway1EA58262POSToidcinteractioncallbackapple9720AA89": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/POST/oidc/interaction/callback/apple",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
     "AuthGatewayoidcinteractioncallbackgoogleAC19D52D": {
       "Properties": {
         "ParentId": {
@@ -1335,6 +1449,116 @@ exports[`Auth Stack 1`] = `
                 "Ref": "AuthGateway83D5F26D",
               },
               "/test-invoke-stage/POST/oidc/interaction/*/federated",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidfederatedapple745C3DAD": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "AuthGatewayoidcinteractionuidfederatedC2057843",
+        },
+        "PathPart": "apple",
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "AuthGatewayoidcinteractionuidfederatedappleGET9B35746B": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractionuidfederatedapple745C3DAD",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidfederatedappleGETApiPermissionAuthStackAuthGateway1EA58262GEToidcinteractionuidfederatedapple1FFD2924": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/GET/oidc/interaction/*/federated/apple",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidfederatedappleGETApiPermissionTestAuthStackAuthGateway1EA58262GEToidcinteractionuidfederatedappleF6DF8DB2": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/GET/oidc/interaction/*/federated/apple",
             ],
           ],
         },
