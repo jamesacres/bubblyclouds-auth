@@ -136,6 +136,9 @@ export const login = `<!DOCTYPE html>
           </span>
           <span class="google-button__text">Sign in with Google</span>
         </a>
+        <a href="/oidc/interaction/<%= uid %>/federated/apple" class="apple-button">
+          Sign in with Apple
+        </a>
         <div class="login-help">
           <a href="/oidc/interaction/<%= uid %>/abort">Cancel</a> | 
           <a href="https://bubblyclouds.com/terms" target="_blank">Terms of Service</a> | 

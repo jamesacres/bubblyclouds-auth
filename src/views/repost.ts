@@ -16,7 +16,7 @@ export const repost = `<html>
       return query;
     }
 
-    var fields = parseQuery(window.location.hash.slice(1));
+    var fields = parseQuery(window.location.hash.slice(1) || window.location.search);
     fields.upstream = '<%= upstream %>'
     var uid = fields.state;
 
