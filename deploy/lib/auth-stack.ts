@@ -114,10 +114,16 @@ export class AuthStack extends Stack {
 
     const interactionCallbackResource =
       interactionResource.addResource('callback');
+
     const interactionCallbackGoogleResource =
       interactionCallbackResource.addResource('google');
     // GET /oidc/interaction/callback/google
     interactionCallbackGoogleResource.addMethod('GET', oidc.integration);
+
+    const interactionCallbackAppleResource =
+      interactionCallbackResource.addResource('apple');
+    // POST /oidc/interaction/callback/apple
+    interactionCallbackAppleResource.addMethod('POST', oidc.integration);
 
     const interactionUidResource = interactionResource.addResource('{uid}');
     // GET /oidc/interaction/:uid
@@ -132,6 +138,11 @@ export class AuthStack extends Stack {
       interactionUidFederatedResource.addResource('google');
     // GET /oidc/interaction/:uid/federated/google
     interactionUidFederatedGoogleResource.addMethod('GET', oidc.integration);
+
+    const interactionUidFederatedAppleResource =
+      interactionUidFederatedResource.addResource('apple');
+    // GET /oidc/interaction/:uid/federated/apple
+    interactionUidFederatedAppleResource.addMethod('GET', oidc.integration);
 
     const interactionUidConfirmResource =
       interactionUidResource.addResource('confirm');

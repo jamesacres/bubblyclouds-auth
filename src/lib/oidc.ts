@@ -25,7 +25,14 @@ const defaultResource: ResourceServer = {
 const corsProp = 'urn:custom:client:allowed-cors-origins';
 
 const initProvider = ({
-  appConfig: { clients, cookies, serverUrl, federatedClients, resources },
+  appConfig: {
+    clients,
+    cookies,
+    serverUrl,
+    serverUrlProd,
+    federatedClients,
+    resources,
+  },
   keys,
   issuer,
 }: OidcOptions) => {
@@ -320,7 +327,14 @@ const initProvider = ({
     }
   );
 
-  provider.use(oidcInteraction(provider, serverUrl, federatedClients).routes());
+  provider.use(
+    oidcInteraction(
+      provider,
+      serverUrl,
+      federatedClients,
+      serverUrlProd
+    ).routes()
+  );
 
   return provider;
 };

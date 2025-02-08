@@ -13,14 +13,18 @@ import { render } from 'ejs';
 import { repost } from '../views/repost';
 import { AppConfig } from '../types/AppConfig';
 import { login } from '../views/login';
+import { getAppleClient } from '../lib/apple';
+import jwt from 'jsonwebtoken';
 
 export const oidcInteraction = (
   provider: Provider,
   serverUrl: string,
-  federatedClients: AppConfig['federatedClients']
+  federatedClients: AppConfig['federatedClients'],
+  serverUrlProd?: string
 ) => {
   // Federated Clients
   let _googleClient: Client;
+  let _appleClient: Client;
   const googleClient = async () => {
     if (!_googleClient) {
       const callbackUrl = `${serverUrl}/oidc/interaction/callback/google`;
@@ -30,6 +34,33 @@ export const oidcInteraction = (
       );
     }
     return _googleClient;
+  };
+  const appleClient = async () => {
+    if (!_appleClient) {
+      const clientSecret = jwt.sign(
+        {
+          iss: federatedClients.apple.teamId,
+          aud: 'https://appleid.apple.com',
+          sub: federatedClients.apple.clientId,
+        },
+        federatedClients.apple.privateKey,
+        {
+          algorithm: 'ES256',
+          expiresIn: 15777000,
+          header: {
+            alg: 'ES256',
+            kid: federatedClients.apple.keyId,
+          },
+        }
+      );
+      const callbackUrl = `${serverUrlProd || serverUrl}/oidc/interaction/callback/apple`;
+      _appleClient = await getAppleClient(
+        federatedClients.apple.clientId,
+        clientSecret,
+        callbackUrl
+      );
+    }
+    return _appleClient;
   };
 
   // Parse bodies
@@ -104,13 +135,55 @@ export const oidcInteraction = (
     );
   });
 
+  router.get('/interaction/:uid/federated/apple', body, async (ctx) => {
+    const {
+      prompt: { name },
+    } = await provider.interactionDetails(ctx.req, ctx.res);
+    if (name !== 'login') {
+      throw Error('unexpected prompt');
+    }
+
+    const state = ctx.params.uid;
+    const nonce = randomBytes(32).toString('hex');
+
+    const nextPath = `/oidc/interaction/${ctx.params.uid}/federated`;
+    ctx.cookies.set('apple.nonce', nonce, {
+      path: nextPath,
+      sameSite: 'strict',
+    });
+
+    ctx.status = 303;
+    return ctx.redirect(
+      (await appleClient()).authorizationUrl({
+        state,
+        nonce,
+        scope: 'openid email',
+        response_mode: 'form_post',
+      })
+    );
+  });
+
   router.get('/interaction/callback/google', async (ctx: Context) => {
     // Callback page, will POST results to /interaction/:uid/federated
     const nonce = ctx.state.cspNonce;
-    ctx.response.body = render(repost, {
+    ctx.response.body = render(repost(), {
       nonce,
       layout: false,
       upstream: FederatedProvider.GOOGLE,
+    });
+  });
+
+  router.post('/interaction/callback/apple', body, async (ctx: Context) => {
+    // Callback page, will POST results to /interaction/:uid/federated
+    const { state, code } = ctx.request.body || {};
+    if (!(state && code)) {
+      throw new errors.InvalidRequest('unexpected request');
+    }
+    const nonce = ctx.state.cspNonce;
+    ctx.response.body = render(repost({ state, code }), {
+      nonce,
+      layout: false,
+      upstream: FederatedProvider.APPLE,
     });
   });
 
@@ -145,6 +218,48 @@ export const oidcInteraction = (
 
       const account = await Account.findByFederated(
         FederatedProvider.GOOGLE,
+        await getIdTokenClaims()
+      );
+
+      return provider.interactionFinished(
+        ctx.req,
+        ctx.res,
+        {
+          login: {
+            accountId: account.accountId,
+            remember: true, // closing and reopening browser does not force new login
+          },
+        },
+        {
+          mergeWithLastSubmission: false,
+        }
+      );
+    }
+
+    if (ctx.request.body?.upstream === FederatedProvider.APPLE) {
+      const callbackParams = (await appleClient()).callbackParams(ctx.req);
+      const nonce = ctx.cookies.get('apple.nonce');
+      const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
+      ctx.cookies.set('apple.nonce', null, { path: thisPath });
+
+      const getIdTokenClaims = async () => {
+        try {
+          const tokenset = await (
+            await appleClient()
+          ).callback(undefined, callbackParams, {
+            nonce,
+            state: ctx.params.uid,
+            response_type: 'code',
+          });
+          return tokenset.claims();
+        } catch (e) {
+          console.error(e);
+          throw new errors.InvalidToken('invalid apple id_token');
+        }
+      };
+
+      const account = await Account.findByFederated(
+        FederatedProvider.APPLE,
         await getIdTokenClaims()
       );
 

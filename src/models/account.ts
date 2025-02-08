@@ -38,13 +38,14 @@ export class Account implements AccountInterface {
     federatedProvider: FederatedProvider,
     claims: IdTokenClaims
   ) {
+    console.info(claims);
     if (!(claims.sub && claims.email && claims.email_verified)) {
       // All federated accounts require a verified email
       throw new errors.InvalidToken('account not found');
     }
 
     const profile: Omit<BubblyUserProfile, 'sub'> = {
-      name: claims.name,
+      name: claims.name || claims.email.split('@')[0],
       given_name: claims.given_name,
       family_name: claims.family_name,
       middle_name: claims.middle_name,
