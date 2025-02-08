@@ -71,13 +71,11 @@ export const login = `<!DOCTYPE html>
         }
 
         .apple-button {
-          padding-top: 0px;
           background: #000000;
           border: 1px solid #000000;
         }
 
         .google-button {
-          padding-top: 5px;
           background: white;
           box-shadow: 1px 1px 0px 1px rgba(0,0,0,0.05);
           transition-property: background-color, box-shadow;
@@ -100,8 +98,8 @@ export const login = `<!DOCTYPE html>
           display: inline-block;
           vertical-align: middle;
           margin: 8px 0 8px 8px;
-          width: 18px;
-          height: 18px;
+          width: 24px;
+          height: 24px;
           box-sizing: border-box;
         }
 
