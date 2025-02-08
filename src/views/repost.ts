@@ -1,4 +1,4 @@
-export const repost = `<html>
+export const repost = (postBody?: { state: string; code: string }) => `<html>
 
 <head>
   <title>Bubbly Clouds Sign in</title>
@@ -16,7 +16,7 @@ export const repost = `<html>
       return query;
     }
 
-    var fields = parseQuery(window.location.hash.slice(1) || window.location.search);
+    var fields = ${JSON.stringify(postBody)} || parseQuery(window.location.hash.slice(1) || window.location.search);
     fields.upstream = '<%= upstream %>'
     var uid = fields.state;
 

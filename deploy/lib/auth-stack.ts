@@ -122,8 +122,8 @@ export class AuthStack extends Stack {
 
     const interactionCallbackAppleResource =
       interactionCallbackResource.addResource('apple');
-    // GET /oidc/interaction/callback/apple
-    interactionCallbackAppleResource.addMethod('GET', oidc.integration);
+    // POST /oidc/interaction/callback/apple
+    interactionCallbackAppleResource.addMethod('POST', oidc.integration);
 
     const interactionUidResource = interactionResource.addResource('{uid}');
     // GET /oidc/interaction/:uid

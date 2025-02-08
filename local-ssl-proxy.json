@@ -1,0 +1,16 @@
+{
+  "Localhost": {
+    "source": 3001,
+    "target": 3000,
+    "key": "mkcert-key.pem",
+    "cert": "mkcert.pem",
+    "hostname": "localhost"
+  },
+  "AuthBubblyCloudsCom": {
+    "source": 443,
+    "target": 3000,
+    "key": "mkcert-key.pem",
+    "cert": "mkcert.pem",
+    "hostname": "auth.bubblyclouds.com"
+  }
+}

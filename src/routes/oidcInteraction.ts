@@ -157,8 +157,8 @@ export const oidcInteraction = (
       (await appleClient()).authorizationUrl({
         state,
         nonce,
-        // TODO need email here, but requires form post, so likely need to make /interaction/callback/apple handle post and figure out how to send that response mode param to apple
-        scope: 'openid',
+        scope: 'openid email',
+        response_mode: 'form_post',
       })
     );
   });
@@ -166,17 +166,21 @@ export const oidcInteraction = (
   router.get('/interaction/callback/google', async (ctx: Context) => {
     // Callback page, will POST results to /interaction/:uid/federated
     const nonce = ctx.state.cspNonce;
-    ctx.response.body = render(repost, {
+    ctx.response.body = render(repost(), {
       nonce,
       layout: false,
       upstream: FederatedProvider.GOOGLE,
     });
   });
 
-  router.get('/interaction/callback/apple', async (ctx: Context) => {
+  router.post('/interaction/callback/apple', body, async (ctx: Context) => {
     // Callback page, will POST results to /interaction/:uid/federated
+    const { state, code } = ctx.request.body || {};
+    if (!(state && code)) {
+      throw new errors.InvalidRequest('unexpected request');
+    }
     const nonce = ctx.state.cspNonce;
-    ctx.response.body = render(repost, {
+    ctx.response.body = render(repost({ state, code }), {
       nonce,
       layout: false,
       upstream: FederatedProvider.APPLE,
