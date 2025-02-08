@@ -60,21 +60,30 @@ export const login = `<!DOCTYPE html>
           background-color: #4d90fe;
         }
   
-        .google-button {
+        .google-button, .apple-button {
           display: block;
           width: 100%;
           height: 40px;
-          border-width: 0;
-          background: white;
           color: #737373;
-          border-radius: 5px;
           white-space: nowrap;
+          padding: 0;
+          border-radius: 5px;
+        }
+
+        .apple-button {
+          padding-top: 0px;
+          background: #000000;
+          border: 1px solid #000000;
+        }
+
+        .google-button {
+          padding-top: 5px;
+          background: white;
           box-shadow: 1px 1px 0px 1px rgba(0,0,0,0.05);
           transition-property: background-color, box-shadow;
           transition-duration: 150ms;
           transition-timing-function: ease-in-out;
-          padding: 0;
-  
+
           &:focus,
           &:hover {
             box-shadow: 1px 4px 5px 1px rgba(0,0,0,0.1);
@@ -86,8 +95,8 @@ export const login = `<!DOCTYPE html>
             transition-duration: 10ms;
           }
         }
-  
-        .google-button__icon {
+
+        .google-button__icon, .apple-button__icon {
           display: inline-block;
           vertical-align: middle;
           margin: 8px 0 8px 8px;
@@ -95,18 +104,25 @@ export const login = `<!DOCTYPE html>
           height: 18px;
           box-sizing: border-box;
         }
-  
-        .google-button__icon--plus {
-          width: 27px;
+
+        .apple-button__icon {
+          margin: 0px;
+          width: 39px;
+          height: 40px;
         }
-  
-        .google-button__text {
+
+        .google-button__text, .apple-button__text {
           display: inline-block;
           vertical-align: middle;
           padding: 0 24px;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: bold;
           font-family: 'Roboto',arial,sans-serif;
+        }
+
+        .apple-button__text {
+          font-family: system-ui;
+          color: #ffffff;
         }
   
         .login-card a {
@@ -115,7 +131,6 @@ export const login = `<!DOCTYPE html>
           text-align: center;
           display: inline-block;
           color: rgb(17, 24, 39);
-          padding-top: 5px;
         }
   
         .login-help {
@@ -136,8 +151,19 @@ export const login = `<!DOCTYPE html>
           </span>
           <span class="google-button__text">Sign in with Google</span>
         </a>
-        <a href="/oidc/interaction/<%= uid %>/federated/apple" class="apple-button">
-          Sign in with Apple
+        <a href="/oidc/interaction/<%= uid %>/federated/apple" class="apple-button" style="margin-top: 8px;">
+          <span class="apple-button__icon">
+            <svg viewBox="0 0 39 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <!-- Generator: Sketch 61 (89581) - https://sketch.com -->
+                <title>Left White Logo Large</title>
+                <desc>Created with Sketch.</desc>
+                <g id="Left-White-Logo-Large" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <rect id="Rectangle" fill="#000000" x="0" y="0" width="39" height="44"></rect>
+                    <path d="M19.8196726,13.1384615 C20.902953,13.1384615 22.2608678,12.406103 23.0695137,11.4296249 C23.8018722,10.5446917 24.3358837,9.30883662 24.3358837,8.07298156 C24.3358837,7.9051494 24.3206262,7.73731723 24.2901113,7.6 C23.0847711,7.64577241 21.6353115,8.4086459 20.7656357,9.43089638 C20.0790496,10.2090273 19.4534933,11.4296249 19.4534933,12.6807374 C19.4534933,12.8638271 19.4840083,13.0469167 19.4992657,13.1079466 C19.5755531,13.1232041 19.6976128,13.1384615 19.8196726,13.1384615 Z M16.0053051,31.6 C17.4852797,31.6 18.1413509,30.6082645 19.9875048,30.6082645 C21.8641736,30.6082645 22.2761252,31.5694851 23.923932,31.5694851 C25.5412238,31.5694851 26.6245041,30.074253 27.6467546,28.6095359 C28.7910648,26.9312142 29.2640464,25.2834075 29.2945613,25.2071202 C29.1877591,25.1766052 26.0904927,23.9102352 26.0904927,20.3552448 C26.0904927,17.2732359 28.5316879,15.8848061 28.6690051,15.7780038 C27.0517133,13.4588684 24.5952606,13.3978385 23.923932,13.3978385 C22.1082931,13.3978385 20.6283185,14.4963764 19.6976128,14.4963764 C18.6906198,14.4963764 17.36322,13.4588684 15.7917006,13.4588684 C12.8012365,13.4588684 9.765,15.9305785 9.765,20.5993643 C9.765,23.4982835 10.8940528,26.565035 12.2824825,28.548506 C13.4725652,30.2268277 14.5100731,31.6 16.0053051,31.6 Z" id="" fill="#FFFFFF" fill-rule="nonzero"></path>
+                </g>
+            </svg>
+          </span>
+          <span class="apple-button__text">Sign in with Apple</span>
         </a>
         <div class="login-help">
           <a href="/oidc/interaction/<%= uid %>/abort">Cancel</a> | 
