@@ -112,6 +112,7 @@ export const oidcInteraction = (
           if (requestEmailCode === undefined) {
             // Generate and send code
             // TODO use nanoid with custom alphabet split into 3, ignore 0oli1
+            // TODO store in dynamodb, make it last an hour, expire on use, return same code if one already exists
             const code = 'ABC-DEF-GHI';
             await sendSignInEmail(email, code);
           } else {

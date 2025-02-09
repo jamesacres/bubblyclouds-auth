@@ -1,12 +1,20 @@
-import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
+import {
+  SESv2Client,
+  SendEmailCommand,
+  SendEmailCommandInput,
+} from '@aws-sdk/client-sesv2';
 import { signInEmail } from '../views/signInEmail';
 
 const sendSignInEmail = async (email: string, code: string): Promise<void> => {
   const client = new SESv2Client();
-  const input = {
-    FromEmailAddress: 'hello@bubblyclouds.com',
-    FromEmailAddressIdentityArn:
-      'arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com',
+  // TODO move to config
+  const fromName = 'Bubbly Clouds';
+  const fromEmail = 'hello@bubblyclouds.com';
+  const fromArn =
+    'arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com';
+  const input: SendEmailCommandInput = {
+    FromEmailAddress: `${fromName} <${fromEmail}>`,
+    FromEmailAddressIdentityArn: fromArn,
     Destination: {
       ToAddresses: [email],
     },
