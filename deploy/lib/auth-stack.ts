@@ -329,6 +329,14 @@ export class AuthStack extends Stack {
         ],
       })
     );
+    oidcFn.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['ses:SendEmail'],
+        resources: [
+          'arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com',
+        ],
+      })
+    );
 
     return {
       redirect: {

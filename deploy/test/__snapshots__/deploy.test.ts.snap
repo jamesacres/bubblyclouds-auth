@@ -147,7 +147,7 @@ exports[`Auth Stack 1`] = `
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
     },
-    "AuthGatewayDeploymentE35D8D60764b7be157a2c372fc01e7936576262b": {
+    "AuthGatewayDeploymentE35D8D60c2520810c70cb15039b9866503466425": {
       "DependsOn": [
         "AuthGatewaywellknownopenidconfigurationGET6F01C5D5",
         "AuthGatewaywellknownopenidconfiguration457368A3",
@@ -171,6 +171,7 @@ exports[`Auth Stack 1`] = `
         "AuthGatewayoidcinteractionuidfederatedPOST46752891",
         "AuthGatewayoidcinteractionuidfederatedC2057843",
         "AuthGatewayoidcinteractionuidGET40993B29",
+        "AuthGatewayoidcinteractionuidPOST05FDC705",
         "AuthGatewayoidcinteractionuidAD2647D5",
         "AuthGatewayoidcinteractioncallbackapplePOST57CCAD46",
         "AuthGatewayoidcinteractioncallbackappleE12D7D1B",
@@ -205,7 +206,7 @@ exports[`Auth Stack 1`] = `
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "AuthGatewayDeploymentE35D8D60764b7be157a2c372fc01e7936576262b",
+          "Ref": "AuthGatewayDeploymentE35D8D60c2520810c70cb15039b9866503466425",
         },
         "MethodSettings": [
           {
@@ -1119,6 +1120,104 @@ exports[`Auth Stack 1`] = `
                 "Ref": "AuthGateway83D5F26D",
               },
               "/test-invoke-stage/GET/oidc/interaction/*",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidPOST05FDC705": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:eu-west-2:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AuthOidcFunctionFEAD1639",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "AuthGatewayoidcinteractionuidAD2647D5",
+        },
+        "RestApiId": {
+          "Ref": "AuthGateway83D5F26D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "AuthGatewayoidcinteractionuidPOSTApiPermissionAuthStackAuthGateway1EA58262POSToidcinteractionuid6FE8D17E": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/",
+              {
+                "Ref": "AuthGatewayDeploymentStageprodAE1C2F72",
+              },
+              "/POST/oidc/interaction/*",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AuthGatewayoidcinteractionuidPOSTApiPermissionTestAuthStackAuthGateway1EA58262POSToidcinteractionuid80A674EA": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AuthOidcFunctionFEAD1639",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:eu-west-2:12345678:",
+              {
+                "Ref": "AuthGateway83D5F26D",
+              },
+              "/test-invoke-stage/POST/oidc/interaction/*",
             ],
           ],
         },
@@ -2498,6 +2597,11 @@ exports[`Auth Stack 1`] = `
                   },
                 ],
               },
+            },
+            {
+              "Action": "ses:SendEmail",
+              "Effect": "Allow",
+              "Resource": "arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com",
             },
             {
               "Action": [
