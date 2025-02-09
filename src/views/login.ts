@@ -177,6 +177,7 @@ export const login = (email?: string) => `<!DOCTYPE html>
           <input name="emailCode" type="text" class="email-input" placeholder="XXX-XXX-XXX-XXX">
           <button class="email-button" type="submit">Continue</button>
         </form>
+        <a href="/oidc/interaction/<%= uid %>" style="margin-top: 16px; font-size: 12px;">Not received? Try a different method</a>
           `
             : `
         <a href="/oidc/interaction/<%= uid %>/federated/google" class="google-button">
