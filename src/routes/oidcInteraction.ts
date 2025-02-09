@@ -15,6 +15,7 @@ import { AppConfig } from '../types/AppConfig';
 import { login } from '../views/login';
 import { getAppleClient } from '../lib/apple';
 import jwt from 'jsonwebtoken';
+import { sendSignInEmail } from '../lib/ses';
 
 export const oidcInteraction = (
   provider: Provider,
@@ -108,8 +109,13 @@ export const oidcInteraction = (
         ) {
           email = requestEmail;
 
-          if (requestEmailCode !== undefined) {
-            const expectedCode = 'ABC-DEF-GHI-123';
+          if (requestEmailCode === undefined) {
+            // Generate and send code
+            // TODO use nanoid with custom alphabet split into 3, ignore 0oli1
+            const code = 'ABC-DEF-GHI';
+            await sendSignInEmail(email, code);
+          } else {
+            const expectedCode = 'ABC-DEF-GHI';
             if (
               !!requestEmailCode &&
               requestEmailCode.toLowerCase().replace('-', '') ===
