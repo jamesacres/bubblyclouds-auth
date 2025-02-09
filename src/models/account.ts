@@ -9,7 +9,7 @@ import { nanoid } from 'nanoid';
 import { DynamoDBAdapter } from '../adapters/dynamodb';
 import { Model } from '../types/Model';
 import { BubblyUserProfile } from '../types/BubblyUserProfile';
-import { FederatedProvider } from '../types/FederatedProvider';
+import { IdentityProvider } from '../types/IdentityProvider';
 
 export class Account implements AccountInterface {
   private static adapter = new DynamoDBAdapter(Model.BubblyUser);
@@ -34,12 +34,12 @@ export class Account implements AccountInterface {
     };
   }
 
-  static async findByFederated(
-    federatedProvider: FederatedProvider,
-    claims: IdTokenClaims
+  static async findByIDP(
+    provider: IdentityProvider,
+    claims: Partial<IdTokenClaims>
   ) {
     console.info(claims);
-    if (!(claims.sub && claims.email && claims.email_verified)) {
+    if (!(claims.email && claims.email_verified)) {
       // All federated accounts require a verified email
       throw new errors.InvalidToken('account not found');
     }
@@ -72,7 +72,7 @@ export class Account implements AccountInterface {
     const sub: string = user?.profile?.sub || `bubblyclouds|${nanoid()}`;
     const createdAt: Date = new Date(user?.createdAt || now);
     await Account.adapter.upsert(sub, {
-      federatedProvider,
+      federatedProvider: provider,
       uid: claims.email,
       profile: { ...profile, sub },
       createdAt: createdAt.toISOString(),

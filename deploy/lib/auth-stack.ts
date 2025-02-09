@@ -126,8 +126,9 @@ export class AuthStack extends Stack {
     interactionCallbackAppleResource.addMethod('POST', oidc.integration);
 
     const interactionUidResource = interactionResource.addResource('{uid}');
-    // GET /oidc/interaction/:uid
+    // GET/POST /oidc/interaction/:uid
     interactionUidResource.addMethod('GET', oidc.integration);
+    interactionUidResource.addMethod('POST', oidc.integration);
 
     const interactionUidFederatedResource =
       interactionUidResource.addResource('federated');
