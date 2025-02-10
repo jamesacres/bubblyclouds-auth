@@ -21,6 +21,7 @@ import {
   signInEmailSubject,
   signInEmailText,
 } from '../views/signInEmail';
+import { SignInCode } from '../lib/signInCode';
 
 export interface OidcInteractionConfig {
   serverUrl: string;
@@ -30,6 +31,7 @@ export interface OidcInteractionConfig {
 export const oidcInteraction = (
   provider: Provider,
   ses: Ses,
+  signInCode: SignInCode,
   federatedClients: AppConfig['federatedClients'],
   { serverUrl, serverUrlProd }: OidcInteractionConfig
 ) => {
@@ -120,23 +122,19 @@ export const oidcInteraction = (
           email = requestEmail;
 
           if (requestEmailCode === undefined) {
-            // Generate and send code
-            // TODO use nanoid with custom alphabet split into 3, ignore 0oli1
-            // TODO store in dynamodb, make it last an hour, expire on use, return same code if one already exists
-            const code = 'ABC-DEF-GHI';
-            await ses.sendEmail({
-              html: signInEmailHtml(code),
-              subject: signInEmailSubject,
-              text: signInEmailText(code),
-              toEmail: email,
-            });
+            try {
+              const code = await signInCode.getCode(email);
+              await ses.sendEmail({
+                html: signInEmailHtml(code),
+                subject: signInEmailSubject,
+                text: signInEmailText(code),
+                toEmail: email,
+              });
+            } catch (e) {
+              console.error(e);
+            }
           } else {
-            const expectedCode = 'ABC-DEF-GHI';
-            if (
-              !!requestEmailCode &&
-              requestEmailCode.toLowerCase().replace('-', '') ===
-                expectedCode.toLowerCase().replace('-', '')
-            ) {
+            if (await signInCode.checkCode(email, requestEmailCode)) {
               console.info('Correct code for email', email);
               const account = await Account.findByIDP(IdentityProvider.EMAIL, {
                 email,
