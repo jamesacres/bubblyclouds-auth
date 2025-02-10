@@ -35,6 +35,7 @@ const initProvider = ({
   },
   keys,
   issuer,
+  ses,
 }: OidcOptions) => {
   console.info('initProvider');
   const configuration: Configuration = {
@@ -328,12 +329,10 @@ const initProvider = ({
   );
 
   provider.use(
-    oidcInteraction(
-      provider,
+    oidcInteraction(provider, ses, federatedClients, {
       serverUrl,
-      federatedClients,
-      serverUrlProd
-    ).routes()
+      serverUrlProd,
+    }).routes()
   );
 
   return provider;

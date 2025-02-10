@@ -1,4 +1,16 @@
-export const signInEmail = (code: string) => `<!DOCTYPE html>
+export const signInEmailSubject = 'Finish signing in to Bubbly Clouds';
+
+export const signInEmailText = (code: string) => `Use this code to sign in
+
+${code}
+
+Enter this code to verify your email address and continue signing in.
+
+Not trying to sign in? Please ignore this email.
+
+Thanks, Bubbly Clouds`;
+
+export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8"> <!-- utf-8 works for most cases -->

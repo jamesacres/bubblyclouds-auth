@@ -3,47 +3,51 @@ import {
   SendEmailCommand,
   SendEmailCommandInput,
 } from '@aws-sdk/client-sesv2';
-import { signInEmail } from '../views/signInEmail';
 
-const sendSignInEmail = async (email: string, code: string): Promise<void> => {
-  const client = new SESv2Client();
-  // TODO move to config
-  const fromName = 'Bubbly Clouds';
-  const fromEmail = 'hello@bubblyclouds.com';
-  const fromArn =
-    'arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com';
-  const input: SendEmailCommandInput = {
-    FromEmailAddress: `${fromName} <${fromEmail}>`,
-    FromEmailAddressIdentityArn: fromArn,
-    Destination: {
-      ToAddresses: [email],
-    },
-    Content: {
-      Simple: {
-        Subject: {
-          Data: 'Finish signing in to Bubbly Clouds',
-        },
-        Body: {
-          Text: {
-            Data: `Use this code to sign in
+export class SesConfig {
+  fromName: string;
+  fromEmail: string;
+  fromArn: string;
+}
 
-${code}
+export class Ses {
+  constructor(private config: SesConfig) {}
 
-Enter this code to verify your email address and continue signing in.
-
-Not trying to sign in? Please ignore this email.
-
-Thanks, Bubbly Clouds`,
+  sendEmail = async ({
+    html,
+    subject,
+    text,
+    toEmail,
+  }: {
+    html: string;
+    subject: string;
+    text: string;
+    toEmail: string;
+  }): Promise<void> => {
+    const client = new SESv2Client();
+    const input: SendEmailCommandInput = {
+      FromEmailAddress: `${this.config.fromName} <${this.config.fromEmail}>`,
+      FromEmailAddressIdentityArn: this.config.fromArn,
+      Destination: {
+        ToAddresses: [toEmail],
+      },
+      Content: {
+        Simple: {
+          Subject: {
+            Data: subject,
           },
-          Html: {
-            Data: signInEmail(code),
+          Body: {
+            Text: {
+              Data: text,
+            },
+            Html: {
+              Data: html,
+            },
           },
         },
       },
-    },
+    };
+    const command = new SendEmailCommand(input);
+    await client.send(command);
   };
-  const command = new SendEmailCommand(input);
-  await client.send(command);
-};
-
-export { sendSignInEmail };
+}

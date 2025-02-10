@@ -15,13 +15,23 @@ import { AppConfig } from '../types/AppConfig';
 import { login } from '../views/login';
 import { getAppleClient } from '../lib/apple';
 import jwt from 'jsonwebtoken';
-import { sendSignInEmail } from '../lib/ses';
+import { Ses } from '../lib/ses';
+import {
+  signInEmailHtml,
+  signInEmailSubject,
+  signInEmailText,
+} from '../views/signInEmail';
+
+export interface OidcInteractionConfig {
+  serverUrl: string;
+  serverUrlProd?: string;
+}
 
 export const oidcInteraction = (
   provider: Provider,
-  serverUrl: string,
+  ses: Ses,
   federatedClients: AppConfig['federatedClients'],
-  serverUrlProd?: string
+  { serverUrl, serverUrlProd }: OidcInteractionConfig
 ) => {
   // Federated Clients
   let _googleClient: Client;
@@ -114,7 +124,12 @@ export const oidcInteraction = (
             // TODO use nanoid with custom alphabet split into 3, ignore 0oli1
             // TODO store in dynamodb, make it last an hour, expire on use, return same code if one already exists
             const code = 'ABC-DEF-GHI';
-            await sendSignInEmail(email, code);
+            await ses.sendEmail({
+              html: signInEmailHtml(code),
+              subject: signInEmailSubject,
+              text: signInEmailText(code),
+              toEmail: email,
+            });
           } else {
             const expectedCode = 'ABC-DEF-GHI';
             if (
