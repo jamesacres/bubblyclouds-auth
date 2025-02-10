@@ -334,6 +334,7 @@ export class AuthStack extends Stack {
         actions: ['ses:SendEmail'],
         resources: [
           'arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com',
+          'arn:aws:ses:eu-west-2:679604770237:configuration-set/my-first-configuration-set',
         ],
       })
     );

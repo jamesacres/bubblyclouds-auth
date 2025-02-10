@@ -2601,7 +2601,10 @@ exports[`Auth Stack 1`] = `
             {
               "Action": "ses:SendEmail",
               "Effect": "Allow",
-              "Resource": "arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com",
+              "Resource": [
+                "arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com",
+                "arn:aws:ses:eu-west-2:679604770237:configuration-set/my-first-configuration-set",
+              ],
             },
             {
               "Action": [
