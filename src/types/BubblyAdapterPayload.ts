@@ -1,10 +1,11 @@
 import { AdapterPayload } from 'oidc-provider';
 import { BubblyUserProfile } from './BubblyUserProfile';
-import { FederatedProvider } from './FederatedProvider';
+import { IdentityProvider } from './IdentityProvider';
 
 export interface BubblyAdapterPayload extends AdapterPayload {
   profile?: BubblyUserProfile;
-  federatedProvider?: FederatedProvider;
+  federatedProvider?: IdentityProvider;
+  signInCode?: string;
   createdAt?: string;
   updatedAt?: string;
 }

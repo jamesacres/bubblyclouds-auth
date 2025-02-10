@@ -126,8 +126,9 @@ export class AuthStack extends Stack {
     interactionCallbackAppleResource.addMethod('POST', oidc.integration);
 
     const interactionUidResource = interactionResource.addResource('{uid}');
-    // GET /oidc/interaction/:uid
+    // GET/POST /oidc/interaction/:uid
     interactionUidResource.addMethod('GET', oidc.integration);
+    interactionUidResource.addMethod('POST', oidc.integration);
 
     const interactionUidFederatedResource =
       interactionUidResource.addResource('federated');
@@ -325,6 +326,15 @@ export class AuthStack extends Stack {
         actions: [
           'appconfig:GetLatestConfiguration',
           'appconfig:StartConfigurationSession',
+        ],
+      })
+    );
+    oidcFn.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['ses:SendEmail'],
+        resources: [
+          'arn:aws:ses:eu-west-2:679604770237:identity/hello@bubblyclouds.com',
+          'arn:aws:ses:eu-west-2:679604770237:configuration-set/my-first-configuration-set',
         ],
       })
     );

@@ -7,6 +7,8 @@ import { getSecret } from '../utils/secrets';
 import mount from 'koa-mount';
 import Koa from 'koa';
 import { AppConfig } from '../types/AppConfig';
+import { Ses } from '../lib/ses';
+import { SignInCode } from '../lib/signInCode';
 
 const oidcOptions = async (): Promise<OidcOptions> => {
   const appConfig: AppConfig = await fetch(
@@ -20,7 +22,9 @@ const oidcOptions = async (): Promise<OidcOptions> => {
   });
   const secret = await getSecret('sigRSA');
   const keys: JWK[] = [JSON.parse(secret)];
-  return { appConfig, keys, issuer: appConfig.serverUrl };
+  const ses = new Ses(appConfig.aws.ses);
+  const signInCode = new SignInCode();
+  return { appConfig, keys, ses, signInCode, issuer: appConfig.serverUrl };
 };
 
 let serverlessHandler: serverless.Handler;

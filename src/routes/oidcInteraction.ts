@@ -6,7 +6,7 @@ import { getGoogleClient } from '../lib/google';
 import { Client } from 'openid-client';
 import { OAuth2Client as GoogleOAuth2Client } from 'google-auth-library';
 import { Account } from '../models/account';
-import { FederatedProvider } from '../types/FederatedProvider';
+import { IdentityProvider } from '../types/IdentityProvider';
 import Provider, { errors } from 'oidc-provider';
 import { constants } from 'http2';
 import { render } from 'ejs';
@@ -15,12 +15,25 @@ import { AppConfig } from '../types/AppConfig';
 import { login } from '../views/login';
 import { getAppleClient } from '../lib/apple';
 import jwt from 'jsonwebtoken';
+import { Ses } from '../lib/ses';
+import {
+  signInEmailHtml,
+  signInEmailSubject,
+  signInEmailText,
+} from '../views/signInEmail';
+import { SignInCode } from '../lib/signInCode';
+
+export interface OidcInteractionConfig {
+  serverUrl: string;
+  serverUrlProd?: string;
+}
 
 export const oidcInteraction = (
   provider: Provider,
-  serverUrl: string,
+  ses: Ses,
+  signInCode: SignInCode,
   federatedClients: AppConfig['federatedClients'],
-  serverUrlProd?: string
+  { serverUrl, serverUrlProd }: OidcInteractionConfig
 ) => {
   // Federated Clients
   let _googleClient: Client;
@@ -89,14 +102,69 @@ export const oidcInteraction = (
     }
   });
 
-  router.get('/interaction/:uid', async (ctx: Context, next) => {
+  const interactionUid = async (ctx: Context, next) => {
     const { uid, params, prompt } = await provider.interactionDetails(
       ctx.req,
       ctx.res
     );
     if (prompt.name === 'login' && params.client_id) {
       const client = await provider.Client.find(<string>params.client_id);
-      return (ctx.response.body = render(login, {
+
+      let email: string | undefined;
+      if (ctx.request.body) {
+        const { email: requestEmail, emailCode: requestEmailCode } = ctx.request
+          .body as { email?: string; emailCode?: string };
+        if (
+          typeof requestEmail === 'string' &&
+          requestEmail.includes('@') &&
+          !requestEmail.includes('"')
+        ) {
+          email = requestEmail;
+
+          if (requestEmailCode === undefined) {
+            try {
+              const code = await signInCode.getCode(email);
+              await ses.sendEmail({
+                html: signInEmailHtml(code),
+                subject: signInEmailSubject,
+                text: signInEmailText(code),
+                toEmail: email,
+              });
+            } catch (e) {
+              console.error(e);
+            }
+          } else {
+            if (await signInCode.checkCode(email, requestEmailCode)) {
+              console.info('Correct code for email', email);
+              const account = await Account.findByIDP(IdentityProvider.EMAIL, {
+                email,
+                email_verified: true,
+              });
+
+              return provider.interactionFinished(
+                ctx.req,
+                ctx.res,
+                {
+                  login: {
+                    accountId: account.accountId,
+                    remember: true, // closing and reopening browser does not force new login
+                  },
+                },
+                {
+                  mergeWithLastSubmission: false,
+                }
+              );
+            } else {
+              console.warn('Invalid code for email', {
+                email,
+                requestEmailCode,
+              });
+            }
+          }
+        }
+      }
+
+      return (ctx.response.body = render(login(email), {
         uid,
         client,
       }));
@@ -106,7 +174,9 @@ export const oidcInteraction = (
       throw Error('consent view not implemented');
     }
     return next();
-  });
+  };
+  router.get('/interaction/:uid', interactionUid);
+  router.post('/interaction/:uid', body, interactionUid);
 
   router.get('/interaction/:uid/federated/google', body, async (ctx) => {
     const {
@@ -169,7 +239,7 @@ export const oidcInteraction = (
     ctx.response.body = render(repost(), {
       nonce,
       layout: false,
-      upstream: FederatedProvider.GOOGLE,
+      upstream: IdentityProvider.GOOGLE,
     });
   });
 
@@ -183,13 +253,13 @@ export const oidcInteraction = (
     ctx.response.body = render(repost({ state, code }), {
       nonce,
       layout: false,
-      upstream: FederatedProvider.APPLE,
+      upstream: IdentityProvider.APPLE,
     });
   });
 
   router.post('/interaction/:uid/federated', body, async (ctx) => {
     // callback from repost
-    if (ctx.request.body?.upstream === FederatedProvider.GOOGLE) {
+    if (ctx.request.body?.upstream === IdentityProvider.GOOGLE) {
       const callbackParams = (await googleClient()).callbackParams(ctx.req);
       const nonce = ctx.cookies.get('google.nonce');
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
@@ -216,8 +286,8 @@ export const oidcInteraction = (
         }
       };
 
-      const account = await Account.findByFederated(
-        FederatedProvider.GOOGLE,
+      const account = await Account.findByIDP(
+        IdentityProvider.GOOGLE,
         await getIdTokenClaims()
       );
 
@@ -236,7 +306,7 @@ export const oidcInteraction = (
       );
     }
 
-    if (ctx.request.body?.upstream === FederatedProvider.APPLE) {
+    if (ctx.request.body?.upstream === IdentityProvider.APPLE) {
       const callbackParams = (await appleClient()).callbackParams(ctx.req);
       const nonce = ctx.cookies.get('apple.nonce');
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
@@ -258,8 +328,8 @@ export const oidcInteraction = (
         }
       };
 
-      const account = await Account.findByFederated(
-        FederatedProvider.APPLE,
+      const account = await Account.findByIDP(
+        IdentityProvider.APPLE,
         await getIdTokenClaims()
       );
 
