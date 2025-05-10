@@ -120,7 +120,7 @@ export class Account implements AccountInterface {
       federatedTokens: mergedFederatedTokens,
     });
 
-    return new Account(sub, { ...newProfile, sub });
+    return new Account(sub, { ...mergedProfile, sub });
   }
 
   static findAccount(): FindAccount {
