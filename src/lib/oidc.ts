@@ -15,6 +15,7 @@ import { logoutSource } from '../views/logoutSource';
 import { postLogoutSuccessSource } from '../views/postLogoutSuccessSource';
 import { promisify } from 'util';
 import { OidcOptions } from '../types/OidcOptions';
+import { FederatedClients } from './federatedClients';
 
 const defaultResource: ResourceServer = {
   scope: 'openid',
@@ -30,8 +31,8 @@ const initProvider = ({
     cookies,
     serverUrl,
     serverUrlProd,
-    federatedClients,
     resources,
+    federatedClients: federatedClientsConfig,
   },
   keys,
   issuer,
@@ -329,11 +330,13 @@ const initProvider = ({
     }
   );
 
+  const federatedClients = new FederatedClients({
+    serverUrl,
+    serverUrlProd,
+    federatedClients: federatedClientsConfig,
+  });
   provider.use(
-    oidcInteraction(provider, ses, signInCode, federatedClients, {
-      serverUrl,
-      serverUrlProd,
-    }).routes()
+    oidcInteraction(provider, ses, signInCode, federatedClients).routes()
   );
 
   return provider;

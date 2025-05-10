@@ -2,19 +2,13 @@ import { randomBytes } from 'crypto';
 import { Context } from 'koa';
 import { koaBody as bodyParser } from 'koa-body';
 import Router from 'koa-router';
-import { getGoogleClient } from '../lib/google';
-import { Client } from 'openid-client';
-import { OAuth2Client as GoogleOAuth2Client } from 'google-auth-library';
 import { Account } from '../models/account';
 import { IdentityProvider } from '../types/IdentityProvider';
 import Provider, { errors } from 'oidc-provider';
 import { constants } from 'http2';
 import { render } from 'ejs';
 import { repost } from '../views/repost';
-import { AppConfig } from '../types/AppConfig';
 import { login } from '../views/login';
-import { getAppleClient } from '../lib/apple';
-import jwt from 'jsonwebtoken';
 import { Ses } from '../lib/ses';
 import {
   signInEmailHtml,
@@ -22,60 +16,14 @@ import {
   signInEmailText,
 } from '../views/signInEmail';
 import { SignInCode } from '../lib/signInCode';
-
-export interface OidcInteractionConfig {
-  serverUrl: string;
-  serverUrlProd?: string;
-}
+import { FederatedClients } from '../lib/federatedClients';
 
 export const oidcInteraction = (
   provider: Provider,
   ses: Ses,
   signInCode: SignInCode,
-  federatedClients: AppConfig['federatedClients'],
-  { serverUrl, serverUrlProd }: OidcInteractionConfig
+  federatedClients: FederatedClients
 ) => {
-  // Federated Clients
-  let _googleClient: Client;
-  let _appleClient: Client;
-  const googleClient = async () => {
-    if (!_googleClient) {
-      const callbackUrl = `${serverUrl}/oidc/interaction/callback/google`;
-      _googleClient = await getGoogleClient(
-        federatedClients.google.clientId,
-        callbackUrl
-      );
-    }
-    return _googleClient;
-  };
-  const appleClient = async () => {
-    if (!_appleClient) {
-      const clientSecret = jwt.sign(
-        {
-          iss: federatedClients.apple.teamId,
-          aud: 'https://appleid.apple.com',
-          sub: federatedClients.apple.clientId,
-        },
-        federatedClients.apple.privateKey,
-        {
-          algorithm: 'ES256',
-          expiresIn: 15777000,
-          header: {
-            alg: 'ES256',
-            kid: federatedClients.apple.keyId,
-          },
-        }
-      );
-      const callbackUrl = `${serverUrlProd || serverUrl}/oidc/interaction/callback/apple`;
-      _appleClient = await getAppleClient(
-        federatedClients.apple.clientId,
-        clientSecret,
-        callbackUrl
-      );
-    }
-    return _appleClient;
-  };
-
   // Parse bodies
   const body = bodyParser({
     text: false,
@@ -197,7 +145,7 @@ export const oidcInteraction = (
 
     ctx.status = 303;
     return ctx.redirect(
-      (await googleClient()).authorizationUrl({
+      (await federatedClients.googleClient()).authorizationUrl({
         state,
         nonce,
         scope: 'openid email profile',
@@ -224,7 +172,7 @@ export const oidcInteraction = (
 
     ctx.status = 303;
     return ctx.redirect(
-      (await appleClient()).authorizationUrl({
+      (await federatedClients.appleClient()).authorizationUrl({
         state,
         nonce,
         scope: 'openid email',
@@ -260,35 +208,20 @@ export const oidcInteraction = (
   router.post('/interaction/:uid/federated', body, async (ctx) => {
     // callback from repost
     if (ctx.request.body?.upstream === IdentityProvider.GOOGLE) {
-      const callbackParams = (await googleClient()).callbackParams(ctx.req);
-      const nonce = ctx.cookies.get('google.nonce');
+      const callbackParams = (
+        await federatedClients.googleClient()
+      ).callbackParams(ctx.req);
+      const nonce = ctx.cookies.get('google.nonce') || '';
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('google.nonce', null, { path: thisPath });
 
-      const getIdTokenClaims = async () => {
-        try {
-          const tokenset = await (
-            await googleClient()
-          ).callback(undefined, callbackParams, {
-            nonce,
-            state: ctx.params.uid,
-            response_type: 'id_token',
-          });
-          const googleOAuth2Client = new GoogleOAuth2Client();
-          await googleOAuth2Client.verifyIdToken({
-            idToken: tokenset.id_token!,
-            audience: federatedClients.google.clientId,
-          });
-          return tokenset.claims();
-        } catch (e) {
-          console.error(e);
-          throw new errors.InvalidToken('invalid google id_token');
-        }
-      };
-
       const account = await Account.findByIDP(
         IdentityProvider.GOOGLE,
-        await getIdTokenClaims()
+        await federatedClients.googleIdTokenClaims(
+          nonce,
+          ctx.params.uid,
+          callbackParams
+        )
       );
 
       return provider.interactionFinished(
@@ -307,30 +240,20 @@ export const oidcInteraction = (
     }
 
     if (ctx.request.body?.upstream === IdentityProvider.APPLE) {
-      const callbackParams = (await appleClient()).callbackParams(ctx.req);
-      const nonce = ctx.cookies.get('apple.nonce');
+      const callbackParams = (
+        await federatedClients.appleClient()
+      ).callbackParams(ctx.req);
+      const nonce = ctx.cookies.get('apple.nonce') || '';
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('apple.nonce', null, { path: thisPath });
 
-      const getIdTokenClaims = async () => {
-        try {
-          const tokenset = await (
-            await appleClient()
-          ).callback(undefined, callbackParams, {
-            nonce,
-            state: ctx.params.uid,
-            response_type: 'code',
-          });
-          return tokenset.claims();
-        } catch (e) {
-          console.error(e);
-          throw new errors.InvalidToken('invalid apple id_token');
-        }
-      };
-
       const account = await Account.findByIDP(
         IdentityProvider.APPLE,
-        await getIdTokenClaims()
+        await federatedClients.appleIdTokenClaims(
+          nonce,
+          ctx.params.uid,
+          callbackParams
+        )
       );
 
       return provider.interactionFinished(
