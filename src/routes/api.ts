@@ -2,12 +2,15 @@ import { koaBody as bodyParser } from 'koa-body';
 import Router from 'koa-router';
 import { constants } from 'http2';
 import { Account } from '../models/account';
+import { IdentityProvider } from '../types/IdentityProvider';
+import { FederatedClients } from '../lib/federatedClients';
 
 export const api = (
   verifyToken: (
     token: string | undefined,
     accountId: string
-  ) => Promise<boolean>
+  ) => Promise<boolean>,
+  federatedClients: FederatedClients
 ) => {
   // Parse json bodies
   const body = bodyParser({
@@ -63,9 +66,23 @@ export const api = (
     async (ctx) => {
       const accountId = ctx.params.accountId;
       const account = new Account(accountId);
-      await account.destroy();
 
-      // TODO do apple unlink account logic if necessary - might need to store apple details with user info if not already doing so
+      const appleTokens = await account.federatedTokens(IdentityProvider.APPLE);
+      if (appleTokens?.refresh_token) {
+        try {
+          // Revoke apple connection
+          console.info('revoking apple connection');
+          (await federatedClients.appleClient()).revoke(
+            appleTokens.refresh_token,
+            'refresh_token'
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // Delete account from db
+      await account.destroy();
 
       ctx.status = 204;
     }

@@ -22,7 +22,7 @@ export class Account implements AccountInterface {
   ) {}
   [key: string]: unknown;
 
-  async claims(): Promise<AccountClaims> {
+  async claims(): Promise<AccountClaims & BubblyUserProfile> {
     if (!this.profile) {
       const user = await Account.adapter.find(this.accountId);
       if (!user) {
@@ -34,6 +34,13 @@ export class Account implements AccountInterface {
       ...this.profile,
       sub: this.accountId,
     };
+  }
+
+  async federatedTokens(
+    provider: IdentityProvider
+  ): Promise<FederatedTokens | undefined> {
+    const user = await Account.adapter.find(this.accountId);
+    return user?.federatedTokens?.[provider];
   }
 
   async destroy(): Promise<void> {

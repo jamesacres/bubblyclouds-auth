@@ -371,7 +371,7 @@ const initProvider = ({
     }
     return false;
   };
-  provider.use(api(verifyToken).routes());
+  provider.use(api(verifyToken, federatedClients).routes());
 
   return provider;
 };
