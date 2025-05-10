@@ -16,6 +16,7 @@ import { postLogoutSuccessSource } from '../views/postLogoutSuccessSource';
 import { promisify } from 'util';
 import { OidcOptions } from '../types/OidcOptions';
 import { FederatedClients } from './federatedClients';
+import { api } from '../routes/api';
 
 const defaultResource: ResourceServer = {
   scope: 'openid',
@@ -338,6 +339,7 @@ const initProvider = ({
   provider.use(
     oidcInteraction(provider, ses, signInCode, federatedClients).routes()
   );
+  provider.use(api().routes());
 
   return provider;
 };

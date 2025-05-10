@@ -35,7 +35,9 @@ const initServerlessHandler = async (): Promise<serverless.Handler> => {
 
     koaApp.use(async (ctx, next) => {
       if (
-        ['/.well-known/openid-configuration', '/jwks'].includes(ctx.request.url)
+        ['/.well-known/openid-configuration', '/jwks', '/api'].some((prefix) =>
+          ctx.request.url.startsWith(prefix)
+        )
       ) {
         ctx.request.url = `/oidc${ctx.request.url}`;
       }

@@ -24,10 +24,11 @@ export const oidcInteraction = (
   signInCode: SignInCode,
   federatedClients: FederatedClients
 ) => {
-  // Parse bodies
+  // Parse urlencoded bodies
   const body = bodyParser({
     text: false,
     json: false,
+    urlencoded: true,
     patchNode: true,
     patchKoa: true,
   });
