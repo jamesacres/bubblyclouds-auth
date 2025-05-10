@@ -10,6 +10,8 @@ import { DynamoDBAdapter } from '../adapters/dynamodb';
 import { Model } from '../types/Model';
 import { BubblyUserProfile } from '../types/BubblyUserProfile';
 import { IdentityProvider } from '../types/IdentityProvider';
+import { FederatedTokens } from '../types/FederatedTokens';
+import { BubblyAdapterPayload } from '../types/BubblyAdapterPayload';
 
 export class Account implements AccountInterface {
   private static adapter = new DynamoDBAdapter(Model.BubblyUser);
@@ -20,7 +22,7 @@ export class Account implements AccountInterface {
   ) {}
   [key: string]: unknown;
 
-  async claims(): Promise<AccountClaims> {
+  async claims(): Promise<AccountClaims & BubblyUserProfile> {
     if (!this.profile) {
       const user = await Account.adapter.find(this.accountId);
       if (!user) {
@@ -34,9 +36,21 @@ export class Account implements AccountInterface {
     };
   }
 
+  async federatedTokens(
+    provider: IdentityProvider
+  ): Promise<FederatedTokens | undefined> {
+    const user = await Account.adapter.find(this.accountId);
+    return user?.federatedTokens?.[provider];
+  }
+
+  async destroy(): Promise<void> {
+    await Account.adapter.destroy(this.accountId);
+  }
+
   static async findByIDP(
     provider: IdentityProvider,
-    claims: Partial<IdTokenClaims>
+    claims: Partial<IdTokenClaims>,
+    federatedTokens: FederatedTokens | undefined
   ) {
     console.info(claims);
     if (!(claims.email && claims.email_verified)) {
@@ -44,7 +58,7 @@ export class Account implements AccountInterface {
       throw new errors.InvalidToken('account not found');
     }
 
-    const profile: Omit<BubblyUserProfile, 'sub'> = {
+    const newProfile: Omit<BubblyUserProfile, 'sub'> = {
       name: claims.name || claims.email.split('@')[0],
       given_name: claims.given_name,
       family_name: claims.family_name,
@@ -66,20 +80,47 @@ export class Account implements AccountInterface {
     };
 
     const user = await Account.adapter.findByUid(claims.email);
+    const sub: string = user?.profile?.sub || `bubblyclouds|${nanoid()}`;
+
+    const mergedProfile: BubblyUserProfile = {
+      ...Object.keys(newProfile).reduce(
+        (result, key) => {
+          if (newProfile[key] !== undefined) {
+            return {
+              ...result,
+              [key]: newProfile[key],
+            };
+          }
+          return result;
+        },
+        { ...user?.profile }
+      ),
+      sub,
+    };
+
+    const mergedFederatedTokens: BubblyAdapterPayload['federatedTokens'] = {
+      ...user?.federatedTokens,
+      ...(provider && federatedTokens
+        ? {
+            [provider]: federatedTokens,
+          }
+        : undefined),
+    };
 
     // Update existing user, or store new user
     const now = new Date();
-    const sub: string = user?.profile?.sub || `bubblyclouds|${nanoid()}`;
+
     const createdAt: Date = new Date(user?.createdAt || now);
     await Account.adapter.upsert(sub, {
       federatedProvider: provider,
       uid: claims.email,
-      profile: { ...profile, sub },
+      profile: mergedProfile,
       createdAt: createdAt.toISOString(),
       updatedAt: now.toISOString(),
+      federatedTokens: mergedFederatedTokens,
     });
 
-    return new Account(sub, { ...profile, sub });
+    return new Account(sub, { ...newProfile, sub });
   }
 
   static findAccount(): FindAccount {

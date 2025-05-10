@@ -15,6 +15,9 @@ import { logoutSource } from '../views/logoutSource';
 import { postLogoutSuccessSource } from '../views/postLogoutSuccessSource';
 import { promisify } from 'util';
 import { OidcOptions } from '../types/OidcOptions';
+import { FederatedClients } from './federatedClients';
+import { api } from '../routes/api';
+import { importJWK, JWK, jwtVerify } from 'jose';
 
 const defaultResource: ResourceServer = {
   scope: 'openid',
@@ -30,8 +33,8 @@ const initProvider = ({
     cookies,
     serverUrl,
     serverUrlProd,
-    federatedClients,
     resources,
+    federatedClients: federatedClientsConfig,
   },
   keys,
   issuer,
@@ -329,12 +332,46 @@ const initProvider = ({
     }
   );
 
+  const federatedClients = new FederatedClients({
+    serverUrl,
+    serverUrlProd,
+    federatedClients: federatedClientsConfig,
+  });
   provider.use(
-    oidcInteraction(provider, ses, signInCode, federatedClients, {
-      serverUrl,
-      serverUrlProd,
-    }).routes()
+    oidcInteraction(provider, ses, signInCode, federatedClients).routes()
   );
+
+  const verifyToken = async (
+    token: string | undefined,
+    accountId: string
+  ): Promise<boolean> => {
+    if (token && accountId) {
+      const publicKey = await importJWK(
+        keys.find((key) => key.kty === 'RSA' && key.use === 'sig')! as JWK,
+        'RS256'
+      );
+      const result = await jwtVerify(token, publicKey, { issuer }).catch(
+        (e) => {
+          console.warn(e);
+          return undefined;
+        }
+      );
+      if (result?.payload?.sub === accountId) {
+        console.info('accountId matches sub', result?.payload?.sub, accountId);
+        return true;
+      } else {
+        console.warn(
+          'accountId does not match sub',
+          result?.payload?.sub,
+          accountId
+        );
+      }
+    } else {
+      console.warn('missing token or accountId');
+    }
+    return false;
+  };
+  provider.use(api(verifyToken, federatedClients).routes());
 
   return provider;
 };

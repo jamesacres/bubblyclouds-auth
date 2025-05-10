@@ -77,6 +77,14 @@ export class AuthStack extends Stack {
     // GET /.well-known/openid-configuration
     openidConfigurationResource.addMethod('GET', oidc.integration);
 
+    const apiResource = authGateway.root.addResource('api');
+    const apiAccountResource = apiResource.addResource('account');
+    const apiAccountIdResource = apiAccountResource.addResource('{accountId}');
+    const apiAccountIdDeleteResource =
+      apiAccountIdResource.addResource('delete');
+    // POST /api/account/:accountId/delete
+    apiAccountIdDeleteResource.addMethod('POST', oidc.integration);
+
     const oidcResource = authGateway.root.addResource('oidc');
     // GET /oidc
     oidcResource.addMethod('GET', redirect.integration);

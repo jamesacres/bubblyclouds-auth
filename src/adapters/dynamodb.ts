@@ -146,6 +146,22 @@ export class DynamoDBAdapter implements Adapter {
       return undefined;
     }
 
+    if (this.name === 'Session') {
+      // When we delete accounts we don't delete sessions, so we need to check account still exists
+      const accountId = result.payload.accountId;
+      console.info('checking if account exists', accountId);
+      let account: BubblyAdapterPayload | undefined;
+      if (accountId) {
+        // Check the account still exists
+        const accountAdapter = new DynamoDBAdapter(Model.BubblyUser);
+        account = await accountAdapter.find(accountId);
+      }
+      if (!account) {
+        console.warn('account no longer exists', accountId);
+        return undefined;
+      }
+    }
+
     return result.payload;
   }
 
