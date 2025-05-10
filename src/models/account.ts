@@ -34,6 +34,10 @@ export class Account implements AccountInterface {
     };
   }
 
+  async destroy(): Promise<void> {
+    await Account.adapter.destroy(this.accountId);
+  }
+
   static async findByIDP(
     provider: IdentityProvider,
     claims: Partial<IdTokenClaims>

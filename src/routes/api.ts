@@ -1,6 +1,7 @@
 import { koaBody as bodyParser } from 'koa-body';
 import Router from 'koa-router';
 import { constants } from 'http2';
+import { Account } from '../models/account';
 
 export const api = (
   verifyToken: (
@@ -61,7 +62,11 @@ export const api = (
     body,
     async (ctx) => {
       const accountId = ctx.params.accountId;
-      console.info(accountId);
+      const account = new Account(accountId);
+      await account.destroy();
+
+      // TODO do apple unlink account logic if necessary - might need to store apple details with user info if not already doing so
+
       ctx.status = 204;
     }
   );
