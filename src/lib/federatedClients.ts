@@ -5,6 +5,7 @@ import { AppConfig } from '../types/AppConfig';
 import { getAppleClient } from '../lib/apple';
 import { getGoogleClient } from '../lib/google';
 import { errors } from 'oidc-provider';
+import { FederatedTokens } from '../types/FederatedTokens';
 
 export interface FederatedClientsConfig {
   federatedClients: AppConfig['federatedClients'];
@@ -36,7 +37,7 @@ export class FederatedClients {
     nonce: string,
     uid: string,
     callbackParams: CallbackParamsType
-  ): Promise<IdTokenClaims> => {
+  ): Promise<{ federatedTokens: FederatedTokens; claims: IdTokenClaims }> => {
     try {
       const tokenset = await (
         await this.googleClient()
@@ -50,7 +51,27 @@ export class FederatedClients {
         idToken: tokenset.id_token!,
         audience: this.config.federatedClients.google.clientId,
       });
-      return tokenset.claims();
+      const {
+        access_token,
+        token_type,
+        id_token,
+        refresh_token,
+        scope,
+        expires_at,
+        session_state,
+      } = tokenset;
+      return {
+        federatedTokens: {
+          access_token,
+          token_type,
+          id_token,
+          refresh_token,
+          scope,
+          expires_at,
+          session_state,
+        },
+        claims: tokenset.claims(),
+      };
     } catch (e) {
       console.error(e);
       throw new errors.InvalidToken('invalid google id_token');
@@ -96,7 +117,7 @@ export class FederatedClients {
     nonce: string,
     uid: string,
     callbackParams: CallbackParamsType
-  ) => {
+  ): Promise<{ federatedTokens: FederatedTokens; claims: IdTokenClaims }> => {
     try {
       const tokenset = await (
         await this.appleClient()
@@ -105,7 +126,27 @@ export class FederatedClients {
         state: uid,
         response_type: 'code',
       });
-      return tokenset.claims();
+      const {
+        access_token,
+        token_type,
+        id_token,
+        refresh_token,
+        scope,
+        expires_at,
+        session_state,
+      } = tokenset;
+      return {
+        federatedTokens: {
+          access_token,
+          token_type,
+          id_token,
+          refresh_token,
+          scope,
+          expires_at,
+          session_state,
+        },
+        claims: tokenset.claims(),
+      };
     } catch (e) {
       console.error(e);
       throw new errors.InvalidToken('invalid apple id_token');

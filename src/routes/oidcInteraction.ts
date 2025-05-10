@@ -85,10 +85,14 @@ export const oidcInteraction = (
           } else {
             if (await signInCode.checkCode(email, requestEmailCode)) {
               console.info('Correct code for email', email);
-              const account = await Account.findByIDP(IdentityProvider.EMAIL, {
-                email,
-                email_verified: true,
-              });
+              const account = await Account.findByIDP(
+                IdentityProvider.EMAIL,
+                {
+                  email,
+                  email_verified: true,
+                },
+                undefined
+              );
 
               return provider.interactionFinished(
                 ctx.req,
@@ -216,13 +220,16 @@ export const oidcInteraction = (
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('google.nonce', null, { path: thisPath });
 
-      const account = await Account.findByIDP(
-        IdentityProvider.GOOGLE,
+      const { claims, federatedTokens } =
         await federatedClients.googleIdTokenClaims(
           nonce,
           ctx.params.uid,
           callbackParams
-        )
+        );
+      const account = await Account.findByIDP(
+        IdentityProvider.GOOGLE,
+        claims,
+        federatedTokens
       );
 
       return provider.interactionFinished(
@@ -248,13 +255,16 @@ export const oidcInteraction = (
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('apple.nonce', null, { path: thisPath });
 
-      const account = await Account.findByIDP(
-        IdentityProvider.APPLE,
+      const { claims, federatedTokens } =
         await federatedClients.appleIdTokenClaims(
           nonce,
           ctx.params.uid,
           callbackParams
-        )
+        );
+      const account = await Account.findByIDP(
+        IdentityProvider.APPLE,
+        claims,
+        federatedTokens
       );
 
       return provider.interactionFinished(
