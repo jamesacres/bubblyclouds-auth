@@ -1,4 +1,5 @@
 import { DynamoDBAdapter } from '../adapters/dynamodb';
+import { DemoAccounts } from '../types/AppConfig';
 import { Model } from '../types/Model';
 import { sanitiseEmail } from '../utils/email';
 import { randomHumanCode } from '../utils/random';
@@ -6,7 +7,7 @@ import { randomHumanCode } from '../utils/random';
 export class SignInCode {
   private adapter = new DynamoDBAdapter(Model.BubblySignInCode);
 
-  constructor() {}
+  constructor(private demoAccounts: DemoAccounts) {}
 
   async getCode(requestEmail: string): Promise<string> {
     const email = sanitiseEmail(requestEmail);
@@ -18,7 +19,8 @@ export class SignInCode {
 
     const now = new Date();
     const expiresInSeconds = 3600; // one hour
-    const signInCode = randomHumanCode();
+    const signInCode =
+      this.demoAccounts[email]?.signInCode || randomHumanCode();
     await this.adapter.upsert(
       email,
       {

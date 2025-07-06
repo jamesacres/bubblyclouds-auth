@@ -1,6 +1,10 @@
 import { ClientMetadata, ResourceServer } from 'oidc-provider';
 import { SesConfig } from '../lib/ses';
 
+export interface DemoAccounts {
+  [email: string]: { signInCode: string } | undefined;
+}
+
 export interface AppConfig {
   aws: {
     ses: SesConfig;
@@ -29,4 +33,5 @@ export interface AppConfig {
       config?: Partial<ResourceServer>;
     };
   };
+  demoAccounts: DemoAccounts;
 }

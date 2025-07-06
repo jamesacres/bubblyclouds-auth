@@ -23,7 +23,7 @@ const oidcOptions = async (): Promise<OidcOptions> => {
   const secret = await getSecret('sigRSA');
   const keys: JWK[] = [JSON.parse(secret)];
   const ses = new Ses(appConfig.aws.ses);
-  const signInCode = new SignInCode();
+  const signInCode = new SignInCode(appConfig.demoAccounts);
   return { appConfig, keys, ses, signInCode, issuer: appConfig.serverUrl };
 };
 
