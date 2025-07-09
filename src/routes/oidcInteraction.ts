@@ -17,6 +17,7 @@ import {
 } from '../views/signInEmail';
 import { SignInCode } from '../lib/signInCode';
 import { FederatedClients } from '../lib/federatedClients';
+import { consent } from '../views/consent';
 
 export const oidcInteraction = (
   provider: Provider,
@@ -123,8 +124,13 @@ export const oidcInteraction = (
       }));
       // // Caller will indicate which to login with, for now default to Google
       // return ctx.redirect(`/oidc/interaction/${uid}/federated/google`);
-    } else if (prompt.name === 'consent') {
-      throw Error('consent view not implemented');
+    } else if (prompt.name === 'consent' && params.client_id) {
+      const client = await provider.Client.find(<string>params.client_id);
+      // Show view with continue button, Chrome won't redirect otherwise
+      return (ctx.response.body = render(consent(), {
+        uid,
+        client,
+      }));
     }
     return next();
   };
@@ -287,12 +293,52 @@ export const oidcInteraction = (
 
   router.post('/interaction/:uid/confirm', body, async (ctx) => {
     const {
-      prompt: { name },
+      grantId,
+      params,
+      session,
+      prompt: { name, details },
     } = await provider.interactionDetails(ctx.req, ctx.res);
     if (name !== 'consent') {
       throw Error('unexpected prompt');
     }
-    throw Error('confirm consent not implemented');
+    if (!params.client_id || !session) {
+      throw Error('missing consent client_id');
+    }
+
+    console.info('Storing consent');
+
+    const grant = grantId
+      ? await provider.Grant.find(grantId)
+      : new provider.Grant({
+          accountId: session.accountId,
+          clientId: <string>params.client_id,
+        });
+
+    if (!grant) {
+      throw Error('grant undefined');
+    }
+
+    if (details.missingOIDCScope) {
+      grant.addOIDCScope((<string[]>details.missingOIDCScope).join(' '));
+    }
+    if (details.missingOIDCClaims) {
+      grant.addOIDCClaims(<string[]>details.missingOIDCClaims);
+    }
+    if (details.missingResourceScopes) {
+      for (const [indicator, scopes] of Object.entries(
+        details.missingResourceScopes
+      )) {
+        grant.addResourceScope(indicator, scopes.join(' '));
+      }
+    }
+
+    const newGrantId = await grant.save();
+
+    const consent = !grantId ? { grantId: newGrantId } : {};
+    const result = { consent };
+    await provider.interactionFinished(ctx.req, ctx.res, result, {
+      mergeWithLastSubmission: true,
+    });
   });
 
   router.get('/interaction/:uid/abort', async (ctx) => {

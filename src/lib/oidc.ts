@@ -168,18 +168,19 @@ const initProvider = ({
     interactions: {
       policy: (() => {
         const policy = interactionPolicy.base();
-        const consentPolicy = policy.get('consent');
 
-        if (consentPolicy) {
-          // Skip forcing native clients to interact, also see loadExistingGrant for skipping consent
-          const nativePrompt = consentPolicy.checks.get('native_client_prompt');
-          if (nativePrompt) {
-            nativePrompt.check = () => {
-              console.warn('Skipping native_client_prompt');
-              return false;
-            };
-          }
-        }
+        // Chrome does not redirect without user interaction so we will require this again
+        // const consentPolicy = policy.get('consent');
+        // if (consentPolicy) {
+        //   // Skip forcing native clients to interact, also see loadExistingGrant for skipping consent
+        //   const nativePrompt = consentPolicy.checks.get('native_client_prompt');
+        //   if (nativePrompt) {
+        //     nativePrompt.check = () => {
+        //       console.warn('Skipping native_client_prompt');
+        //       return false;
+        //     };
+        //   }
+        // }
 
         return policy;
       })(),
@@ -237,14 +238,22 @@ const initProvider = ({
           ctx.oidc.session?.grantIdFor(ctx.oidc.client?.clientId));
       if (grantId) {
         console.info('Existing grant');
-        // return ctx.oidc.provider.Grant.find(grantId);
+        if (ctx.oidc.client?.applicationType === 'native') {
+          console.info('Returning existing native grant');
+          return ctx.oidc.provider.Grant.find(grantId);
+        }
         // We won't load the existing grant
         // We want a new grant each time
         console.warn('Ignoring existing grant');
       }
 
       // We always want to skip consent screen
-      if (ctx.oidc.client && ctx.oidc.session) {
+      // Unless native
+      if (
+        ctx.oidc.client &&
+        ctx.oidc.session &&
+        ctx.oidc.client.applicationType !== 'native'
+      ) {
         console.info('Skipping consent');
         const grant = new ctx.oidc.provider.Grant({
           clientId: ctx.oidc.client.clientId,
