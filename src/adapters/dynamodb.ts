@@ -146,7 +146,7 @@ export class DynamoDBAdapter implements Adapter {
       return undefined;
     }
 
-    if (this.name === 'Session') {
+    if (this.name === 'Session' && result.payload.accountId) {
       // When we delete accounts we don't delete sessions, so we need to check account still exists
       const accountId = result.payload.accountId;
       console.info('checking if account exists', accountId);
