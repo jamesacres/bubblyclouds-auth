@@ -130,7 +130,8 @@ export const consent = () => `<!DOCTYPE html>
           <button class="continue-button" type="submit">Continue</button>
         </form>
         <div class="login-help">
-          <a href="/oidc/interaction/<%= uid %>/abort">Cancel</a> | 
+          <a href="/oidc/interaction/<%= uid %>?switchUser=true">Switch User</a> |
+          <a href="/oidc/interaction/<%= uid %>/abort">Cancel</a><br><br>
           <a href="https://bubblyclouds.com/terms" target="_blank">Terms of Service</a> | 
           <a href="https://bubblyclouds.com/privacy" target="_blank">Privacy Policy</a>
         </div>

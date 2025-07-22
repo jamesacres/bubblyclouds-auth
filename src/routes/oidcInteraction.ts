@@ -53,10 +53,18 @@ export const oidcInteraction = (
   });
 
   const interactionUid = async (ctx: Context, next) => {
-    const { uid, params, prompt } = await provider.interactionDetails(
+    const { uid, params, prompt, session } = await provider.interactionDetails(
       ctx.req,
       ctx.res
     );
+    if (ctx.request.query.switchUser === 'true' && session?.cookie) {
+      await provider.Session.adapter.destroy(session.cookie);
+      return ctx.response.redirect(
+        `/oidc/auth?${Object.keys(params)
+          .map((key) => `${key}=${params[key]}`)
+          .join('&')}`
+      );
+    }
     if (prompt.name === 'login' && params.client_id) {
       const client = await provider.Client.find(<string>params.client_id);
 
