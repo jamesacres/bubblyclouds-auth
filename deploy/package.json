@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk:deploy": "ENV=prod cdk deploy",
+    "cdk:diff": "ENV=prod cdk diff",
     "cdk:synth": "ENV=dev cdk synth",
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
