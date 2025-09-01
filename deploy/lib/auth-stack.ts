@@ -215,8 +215,8 @@ export class AuthStack extends Stack {
       pointInTimeRecovery: true,
       timeToLiveAttribute: 'expiresAt',
       deletionProtection: true,
-      readCapacity: 25,
-      writeCapacity: 25,
+      readCapacity: 10,
+      writeCapacity: 10,
     });
 
     // As per src/adapters/dynamodb.ts define secondary indexes
