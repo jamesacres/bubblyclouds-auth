@@ -12,6 +12,7 @@ import { BubblyUserProfile } from '../types/BubblyUserProfile';
 import { IdentityProvider } from '../types/IdentityProvider';
 import { FederatedTokens } from '../types/FederatedTokens';
 import { BubblyAdapterPayload } from '../types/BubblyAdapterPayload';
+import { sanitiseEmail } from '../utils/email';
 
 export class Account implements AccountInterface {
   private static adapter = new DynamoDBAdapter(Model.BubblyUser);
@@ -57,9 +58,11 @@ export class Account implements AccountInterface {
       // All federated accounts require a verified email
       throw new errors.InvalidToken('account not found');
     }
+    // Google IDP can return emails in original casing
+    const safeEmail = sanitiseEmail(claims.email);
 
     const newProfile: Omit<BubblyUserProfile, 'sub'> = {
-      name: claims.name || claims.email.split('@')[0],
+      name: claims.name || safeEmail.split('@')[0],
       given_name: claims.given_name,
       family_name: claims.family_name,
       middle_name: claims.middle_name,
@@ -68,7 +71,7 @@ export class Account implements AccountInterface {
       profile: claims.profile,
       picture: claims.picture,
       website: claims.website,
-      email: claims.email,
+      email: safeEmail,
       email_verified: claims.email_verified,
       gender: claims.gender,
       birthdate: claims.birthdate,
@@ -79,7 +82,7 @@ export class Account implements AccountInterface {
       address: claims.address,
     };
 
-    const user = await Account.adapter.findByUid(claims.email);
+    const user = await Account.adapter.findByUid(safeEmail);
     const sub: string = user?.profile?.sub || `bubblyclouds|${nanoid()}`;
 
     const mergedProfile: BubblyUserProfile = {
@@ -113,7 +116,7 @@ export class Account implements AccountInterface {
     const createdAt: Date = new Date(user?.createdAt || now);
     await Account.adapter.upsert(sub, {
       federatedProvider: provider,
-      uid: claims.email,
+      uid: safeEmail,
       profile: mergedProfile,
       createdAt: createdAt.toISOString(),
       updatedAt: now.toISOString(),
