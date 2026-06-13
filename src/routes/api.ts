@@ -1,5 +1,6 @@
 import { koaBody as bodyParser } from 'koa-body';
-import Router from 'koa-router';
+import Router, { RouterContext } from 'koa-router';
+import { Next } from 'koa';
 import { constants } from 'http2';
 import { Account } from '../models/account';
 import { IdentityProvider } from '../types/IdentityProvider';
@@ -30,7 +31,10 @@ export const api = (
     try {
       await next();
     } catch (e) {
-      if (e?.status < constants.HTTP_STATUS_INTERNAL_SERVER_ERROR) {
+      if (
+        ((e as { status?: number })?.status ?? 500) <
+        constants.HTTP_STATUS_INTERNAL_SERVER_ERROR
+      ) {
         console.warn(e);
       } else {
         console.error(e);
@@ -40,7 +44,7 @@ export const api = (
     }
   });
 
-  const authMiddleware = async (ctx, next) => {
+  const authMiddleware = async (ctx: RouterContext, next: Next) => {
     const extractTokenFromHeader = (
       authorization: string | undefined
     ): string | undefined => {

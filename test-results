@@ -1,0 +1,244 @@
+
+> bubblyclouds-auth@0.1.0 test:integration
+> node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.integration.config.cjs --testPathPattern=integration --runInBand
+
+  console.info
+    initProvider
+
+      at initProvider (src/lib/oidc.ts:44:11)
+
+  console.log
+    pre middleware GET /.well-known/openid-configuration
+
+      at src/lib/oidc.ts:324:13
+
+  console.log
+    post middleware GET discovery
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware GET /jwks
+
+      at src/lib/oidc.ts:324:13
+
+  console.log
+    post middleware GET jwks
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware GET /auth
+
+      at src/lib/oidc.ts:324:13
+
+  console.info
+    defaultResource bubbly-sudoku
+
+      at defaultResource (src/lib/oidc.ts:119:21)
+
+  console.info
+    getResourceServerInfo default client bubbly-sudoku
+
+      at getResourceServerInfo (src/lib/oidc.ts:130:23)
+
+  console.log
+    post middleware GET authorization
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware GET /auth
+
+      at src/lib/oidc.ts:324:13
+
+  console.info
+    getResourceServerInfo specific resource bubbly-sudoku https://api.bubblyclouds.com
+
+      at getResourceServerInfo (src/lib/oidc.ts:142:23)
+
+  console.log
+    post middleware GET authorization
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware GET /auth
+
+      at src/lib/oidc.ts:324:13
+
+  console.info
+    defaultResource bubbly-sudoku
+
+      at defaultResource (src/lib/oidc.ts:119:21)
+
+  console.info
+    getResourceServerInfo default client bubbly-sudoku
+
+      at getResourceServerInfo (src/lib/oidc.ts:130:23)
+
+  console.log
+    post middleware GET authorization
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware GET /interaction/QNOWidnqwBOQ4NcwTcial
+
+      at src/lib/oidc.ts:324:13
+
+  console.log
+    pre middleware GET /auth
+
+      at src/lib/oidc.ts:324:13
+
+  console.info
+    defaultResource bubbly-sudoku-native
+
+      at defaultResource (src/lib/oidc.ts:119:21)
+
+  console.info
+    getResourceServerInfo default client bubbly-sudoku-native
+
+      at getResourceServerInfo (src/lib/oidc.ts:130:23)
+
+  console.log
+    post middleware GET authorization
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware GET /auth
+
+      at src/lib/oidc.ts:324:13
+
+  console.info
+    defaultResource bubbly-sudoku
+
+      at defaultResource (src/lib/oidc.ts:119:21)
+
+  console.info
+    getResourceServerInfo default client bubbly-sudoku
+
+      at getResourceServerInfo (src/lib/oidc.ts:130:23)
+
+  console.log
+    post middleware GET authorization
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware GET /interaction/bSOwCODGUQni8OHORhRDq
+
+      at src/lib/oidc.ts:324:13
+
+  console.error
+    Error: not found
+        at BackOff.getResult [as request] (/Users/jamesacres/Documents/git/bubblyclouds-auth/src/adapters/dynamodb.ts:165:15)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+      172 |       numOfAttempts: MAX_RETRIES,
+      173 |     }).catch((e) => {
+    > 174 |       console.error(e);
+          |               ^
+      175 |       return undefined;
+      176 |     });
+      177 |
+
+      at src/adapters/dynamodb.ts:174:15
+      at DynamoDBAdapter.find (src/adapters/dynamodb.ts:170:20)
+      at SignInCode.getCode (src/lib/signInCode.ts:15:26)
+      at interactionUid (src/routes/oidcInteraction.ts:93:26)
+      at src/routes/oidcInteraction.ts:43:7
+      at src/lib/oidc.ts:326:5
+      at node_modules/koa-mount/index.js:58:5
+      at tests/integration/setup/appServer.ts:73:5
+
+  console.error
+    UnrecognizedClientException: The security token included in the request is invalid.
+        at throwDefaultError (/Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/@smithy/smithy-client/dist-cjs/index.js:867:20)
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/@smithy/smithy-client/dist-cjs/index.js:876:5
+        at de_CommandError (/Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/@aws-sdk/client-sesv2/dist-cjs/index.js:3565:14)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/@smithy/core/dist-cjs/index.js:167:18
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/@smithy/middleware-retry/dist-cjs/index.js:321:38
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:33:22
+        at Ses.sendEmail (/Users/jamesacres/Documents/git/bubblyclouds-auth/src/lib/ses.ts:51:5)
+        at interactionUid (/Users/jamesacres/Documents/git/bubblyclouds-auth/src/routes/oidcInteraction.ts:94:13)
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/src/routes/oidcInteraction.ts:43:7
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/src/lib/oidc.ts:326:5
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/node_modules/koa-mount/index.js:58:5
+        at /Users/jamesacres/Documents/git/bubblyclouds-auth/tests/integration/setup/appServer.ts:73:5 {
+      '$fault': 'client',
+      '$metadata': {
+        httpStatusCode: 403,
+        requestId: '5a4c877c-a56d-484e-82d5-5ed8c9662961',
+        extendedRequestId: undefined,
+        cfId: undefined,
+        attempts: 1,
+        totalRetryDelay: 0
+      }
+    }
+
+       99 |             });
+      100 |           } catch (e) {
+    > 101 |             console.error(e);
+          |                     ^
+      102 |           }
+      103 |         } else {
+      104 |           if (await signInCode.checkCode(email, requestEmailCode)) {
+
+      at interactionUid (src/routes/oidcInteraction.ts:101:21)
+      at src/routes/oidcInteraction.ts:43:7
+      at src/lib/oidc.ts:326:5
+      at node_modules/koa-mount/index.js:58:5
+      at tests/integration/setup/appServer.ts:73:5
+
+  console.log
+    pre middleware GET /auth
+
+      at src/lib/oidc.ts:324:13
+
+  console.info
+    defaultResource bubbly-sudoku
+
+      at defaultResource (src/lib/oidc.ts:119:21)
+
+  console.info
+    getResourceServerInfo default client bubbly-sudoku
+
+      at getResourceServerInfo (src/lib/oidc.ts:130:23)
+
+  console.log
+    post middleware GET authorization
+
+      at src/lib/oidc.ts:329:15
+
+  console.log
+    pre middleware POST /interaction/8zNdnUECkxeTfTWIVsNDv
+
+      at src/lib/oidc.ts:324:13
+
+  console.error
+    Error: not found
+        at BackOff.getResult [as request] (/Users/jamesacres/Documents/git/bubblyclouds-auth/src/adapters/dynamodb.ts:165:15)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+      172 |       numOfAttempts: MAX_RETRIES,
+      173 |     }).catch((e) => {
+    > 174 |       console.error(e);
+          |               ^
+      175 |       return undefined;
+      176 |     });
+      177 |
+
+      at src/adapters/dynamodb.ts:174:15
+      at DynamoDBAdapter.find (src/adapters/dynamodb.ts:170:20)
+      at SignInCode.getCode (src/lib/signInCode.ts:15:26)
+      at interactionUid (src/routes/oidcInteraction.ts:93:26)
+      at src/routes/oidcInteraction.ts:43:7
+      at src/lib/oidc.ts:326:5
+      at node_modules/koa-mount/index.js:58:5
+      at tests/integration/setup/appServer.ts:73:5
+

@@ -14,12 +14,12 @@ export interface FederatedClientsConfig {
 }
 
 export class FederatedClients {
-  private _googleClient: Client;
-  private _appleClient: Client;
+  private _googleClient: Client | undefined;
+  private _appleClient: Client | undefined;
 
   constructor(private config: FederatedClientsConfig) {}
 
-  googleClient = async () => {
+  googleClient = async (): Promise<Client> => {
     if (!this._googleClient) {
       const {
         serverUrl,
@@ -78,7 +78,7 @@ export class FederatedClients {
     }
   };
 
-  appleClient = async () => {
+  appleClient = async (): Promise<Client> => {
     if (!this._appleClient) {
       const {
         serverUrl,

@@ -42,7 +42,10 @@ export const oidcInteraction = (
     try {
       await next();
     } catch (e) {
-      if (e?.status < constants.HTTP_STATUS_INTERNAL_SERVER_ERROR) {
+      if (
+        ((e as { status?: number })?.status ?? 500) <
+        constants.HTTP_STATUS_INTERNAL_SERVER_ERROR
+      ) {
         console.warn(e);
       } else {
         console.error(e);
@@ -138,6 +141,7 @@ export const oidcInteraction = (
         )
       ) {
         // Caller can indicate to skip choosing provider
+        ctx.status = 303;
         return ctx.redirect(
           `/oidc/interaction/${uid}/federated/${params.bubblyIdentityProvider}`
         );

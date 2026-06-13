@@ -9,14 +9,21 @@ import Koa from 'koa';
 import { AppConfig } from '../types/AppConfig';
 import { Ses } from '../lib/ses';
 import { SignInCode } from '../lib/signInCode';
+import { DynamoDBAdapter } from '../adapters/dynamodb';
+
+DynamoDBAdapter.configure({
+  tableName: process.env.OAUTH_TABLE!,
+  region: process.env.AWS_REGION!,
+  endpoint: process.env.DYNAMODB_ENDPOINT,
+});
 
 const oidcOptions = async (): Promise<OidcOptions> => {
   const appConfig: AppConfig = await fetch(
     `http://localhost:2772${process.env.AWS_APPCONFIG_EXTENSION_PREFETCH_LIST}`
   ).then(async (res) => {
-    const response = await res.json();
+    const response = (await res.json()) as AppConfig;
     if (!res.ok) {
-      throw Error(response);
+      throw Error(String(response));
     }
     return response;
   });

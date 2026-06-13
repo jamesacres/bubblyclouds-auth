@@ -1,0 +1,5 @@
+deploy/
+node_modules/
+babel.config.js
+jest.integration.config.cjs
+scripts/

@@ -16,12 +16,12 @@ Produce four documentation files that let an AI agent immediately understand and
 
 ## What Each File Does
 
-| File | Audience | Purpose |
-|------|----------|---------|
-| `README.md` | Humans & agents | Project overview, quick-start commands, project structure, tech stack |
-| `ARCHITECTURE.md` | Agents & senior devs | Package hierarchy, dependency rules, decision trees, key patterns |
-| `CLAUDE.md` | Claude Code (Claude AI) | Concise rules the agent must follow every session (loaded automatically) |
-| `AGENTS.md` | Other AI agents (Gemini, GPT, etc.) | Identical to CLAUDE.md — copy with any agent-specific adjustments |
+| File              | Audience                            | Purpose                                                                  |
+| ----------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| `README.md`       | Humans & agents                     | Project overview, quick-start commands, project structure, tech stack    |
+| `ARCHITECTURE.md` | Agents & senior devs                | Package hierarchy, dependency rules, decision trees, key patterns        |
+| `CLAUDE.md`       | Claude Code (Claude AI)             | Concise rules the agent must follow every session (loaded automatically) |
+| `AGENTS.md`       | Other AI agents (Gemini, GPT, etc.) | Identical to CLAUDE.md — copy with any agent-specific adjustments        |
 
 ---
 
@@ -156,6 +156,7 @@ Explain the most important non-obvious pattern. Common examples:
 #### Import Guidelines
 
 Show side-by-side good/bad examples for:
+
 - Internal imports (within the same package) → relative paths
 - Cross-package imports → absolute package name
 - Type-only imports → `import type`

@@ -12,7 +12,7 @@ const getSecret = async (secretId: string): Promise<string> => {
       console.error('Invalid response :', json);
       throw new Error(`Invalid ${response.status} response`);
     }
-    const result = await response.json();
+    const result = (await response.json()) as { SecretString?: string };
     return result.SecretString || '';
   } catch (error) {
     console.error('Error:', error);

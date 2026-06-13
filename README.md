@@ -31,26 +31,27 @@ npm run start:ssl
 
 ### Application (root)
 
-| Command | Description |
-|---|---|
-| `npm start` | Synthesise CDK template then run with SAM CLI |
-| `npm run start:ssl` | Start local SSL proxy (second terminal) |
-| `npm test` | Run all Jest tests |
-| `npm test -- src/handlers/oidc.test.ts` | Run a single test file |
-| `npx eslint .` | Lint source files |
-| `npx prettier --write .` | Auto-format source files |
+| Command                                 | Description                                   |
+| --------------------------------------- | --------------------------------------------- |
+| `npm start`                             | Synthesise CDK template then run with SAM CLI |
+| `npm run start:ssl`                     | Start local SSL proxy (second terminal)       |
+| `npm test`                              | Run all Jest unit tests                       |
+| `npm test -- src/handlers/oidc.test.ts` | Run a single test file                        |
+| `npm run test:integration`              | Run integration tests (requires DynamoDB)     |
+| `npx eslint .`                          | Lint source files                             |
+| `npx prettier --write .`                | Auto-format source files                      |
 
 ### CDK Infrastructure (`deploy/`)
 
-| Command | Description |
-|---|---|
-| `npm run build` | Compile CDK TypeScript |
-| `npm run lint` | Lint CDK code |
-| `npm run lint:fix` | Auto-fix CDK lint issues |
-| `npm run test` | Run CDK tests |
-| `npm run cdk:synth` | Synthesise CloudFormation (ENV=dev) |
-| `npm run cdk:deploy` | Deploy to AWS (ENV=prod) |
-| `npm run cdk:diff` | Diff deployed vs current |
+| Command              | Description                         |
+| -------------------- | ----------------------------------- |
+| `npm run build`      | Compile CDK TypeScript              |
+| `npm run lint`       | Lint CDK code                       |
+| `npm run lint:fix`   | Auto-fix CDK lint issues            |
+| `npm run test`       | Run CDK tests                       |
+| `npm run cdk:synth`  | Synthesise CloudFormation (ENV=dev) |
+| `npm run cdk:deploy` | Deploy to AWS (ENV=prod)            |
+| `npm run cdk:diff`   | Diff deployed vs current            |
 
 ## Module Documentation
 
@@ -112,6 +113,22 @@ Runtime config (OIDC clients, federated provider credentials, resource servers, 
 The RSA signing key lives in Secrets Manager as `sigRSA` (JSON-serialised JWK).
 
 `deploy/` requires a `.env` file with: `AWS_ACCOUNT_ID`, `AWS_DEFAULT_REGION`, `CERTIFICATE_ARN`, `DOMAIN_NAME`, `SUBDOMAIN`, `APP_CONFIG_APPLICATION_NAME`.
+
+## Integration Tests
+
+The integration tests run the full OIDC flows end-to-end against a real local DynamoDB instance. AWS is never called — SES and federated providers (Google, Apple) are mocked.
+
+**Prerequisites:** Docker
+
+```bash
+# Start local DynamoDB in one terminal
+docker run -p 8000:8000 amazon/dynamodb-local
+
+# Run integration tests in another terminal
+npm run test:integration
+```
+
+The tests cover: OIDC discovery, authorization endpoint (basic, full scopes, native client, `bubblyEmail`, `bubblyIdentityProvider`), full email sign-in → code exchange → refresh token, account deletion, token rotation, and native client consent flow.
 
 ## Contributing
 

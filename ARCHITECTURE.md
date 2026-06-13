@@ -22,23 +22,23 @@ deploy/
 
 ### Module responsibilities
 
-| Module | Responsibility |
-|---|---|
-| `handlers/oidc.ts` | Lambda entry point; initialises Koa + oidc-provider on cold start |
-| `handlers/redirect.ts` | Lightweight redirect handler (root → bubblyclouds.com) |
-| `lib/oidc.ts` | Constructs and configures the `oidc-provider` instance |
-| `lib/federatedClients.ts` | Wraps Google and Apple OIDC clients; handles token exchange |
-| `lib/ses.ts` | SES v2 email delivery |
-| `lib/signInCode.ts` | Magic code generation, storage (DynamoDB), and verification |
-| `lib/google.ts` | `openid-client` discovery for Google |
-| `lib/apple.ts` | `openid-client` discovery for Apple |
-| `adapters/dynamodb.ts` | `oidc-provider` Adapter interface backed by a single DynamoDB table |
-| `models/account.ts` | OIDC Account model — `findByIDP` upserts users, `claims()` emits userinfo |
-| `routes/oidcInteraction.ts` | Login UI, email code flow, federated callbacks, consent, abort |
-| `routes/api.ts` | Account management API (`POST /api/account/:id/delete`) |
-| `views/` | HTML templates as EJS strings (login, consent, logout, repost) |
-| `types/` | Shared interfaces: `AppConfig`, `BubblyUserProfile`, `BubblyAdapterPayload`, etc. |
-| `utils/` | `sanitiseEmail`, `randomHumanCode`, `getSecret` (Secrets Manager via local proxy) |
+| Module                      | Responsibility                                                                    |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| `handlers/oidc.ts`          | Lambda entry point; initialises Koa + oidc-provider on cold start                 |
+| `handlers/redirect.ts`      | Lightweight redirect handler (root → bubblyclouds.com)                            |
+| `lib/oidc.ts`               | Constructs and configures the `oidc-provider` instance                            |
+| `lib/federatedClients.ts`   | Wraps Google and Apple OIDC clients; handles token exchange                       |
+| `lib/ses.ts`                | SES v2 email delivery                                                             |
+| `lib/signInCode.ts`         | Magic code generation, storage (DynamoDB), and verification                       |
+| `lib/google.ts`             | `openid-client` discovery for Google                                              |
+| `lib/apple.ts`              | `openid-client` discovery for Apple                                               |
+| `adapters/dynamodb.ts`      | `oidc-provider` Adapter interface backed by a single DynamoDB table               |
+| `models/account.ts`         | OIDC Account model — `findByIDP` upserts users, `claims()` emits userinfo         |
+| `routes/oidcInteraction.ts` | Login UI, email code flow, federated callbacks, consent, abort                    |
+| `routes/api.ts`             | Account management API (`POST /api/account/:id/delete`)                           |
+| `views/`                    | HTML templates as EJS strings (login, consent, logout, repost)                    |
+| `types/`                    | Shared interfaces: `AppConfig`, `BubblyUserProfile`, `BubblyAdapterPayload`, etc. |
+| `utils/`                    | `sanitiseEmail`, `randomHumanCode`, `getSecret` (Secrets Manager via local proxy) |
 
 ## Request Flow
 
