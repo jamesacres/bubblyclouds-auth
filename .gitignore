@@ -1,2 +1,9 @@
 node_modules
 .env
+.serena
+.claude
+.gemini
+.kiro/settings
+.kiro/skills
+.vscode
+

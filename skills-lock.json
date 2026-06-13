@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "repo-documentation": {
+      "source": "/Users/jamesacres/Documents/git/bubblyclouds-app/local-skills",
+      "sourceType": "local",
+      "computedHash": "04ad6051d4c7a62c8ddca426e6756869891b7d6c184f531568ae0e7bc0f7483a"
+    }
+  }
+}
