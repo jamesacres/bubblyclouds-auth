@@ -52,12 +52,18 @@ export const oidcInteraction = (
     }
   });
 
-  const interactionUid = async (ctx: Context, next) => {
+  const interactionUid = async (ctx: Context, next: () => unknown) => {
     const { uid, params, prompt, session } = await provider.interactionDetails(
       ctx.req,
       ctx.res
     );
-    if (ctx.request.query.switchUser === 'true' && session?.cookie) {
+    const requestQuery: {
+      switchUser?: string | string[];
+    } = ctx.request.query || {};
+    const requestBody: { email?: string; emailCode?: string } =
+      ctx.request.body || {};
+
+    if (requestQuery.switchUser === 'true' && session?.cookie) {
       await provider.Session.adapter.destroy(session.cookie);
       return ctx.response.redirect(
         `/oidc/auth?${Object.keys(params)
@@ -69,69 +75,78 @@ export const oidcInteraction = (
       const client = await provider.Client.find(<string>params.client_id);
 
       let email: string | undefined;
-      if (ctx.request.body) {
-        const { email: requestEmail, emailCode: requestEmailCode } = ctx.request
-          .body as { email?: string; emailCode?: string };
-        if (
-          typeof requestEmail === 'string' &&
-          requestEmail.includes('@') &&
-          !requestEmail.includes('"')
-        ) {
-          email = requestEmail;
 
-          if (requestEmailCode === undefined) {
-            try {
-              const code = await signInCode.getCode(email);
-              await ses.sendEmail({
-                html: signInEmailHtml(code),
-                subject: signInEmailSubject,
-                text: signInEmailText(code),
-                toEmail: email,
-              });
-            } catch (e) {
-              console.error(e);
-            }
-          } else {
-            if (await signInCode.checkCode(email, requestEmailCode)) {
-              console.info('Correct code for email', email);
-              const account = await Account.findByIDP(
-                IdentityProvider.EMAIL,
-                {
-                  email,
-                  email_verified: true,
-                },
-                undefined
-              );
+      const requestEmail = requestBody.email || params.bubblyEmail;
+      const requestEmailCode = requestBody.emailCode;
+      if (
+        typeof requestEmail === 'string' &&
+        requestEmail.includes('@') &&
+        !requestEmail.includes('"')
+      ) {
+        email = requestEmail;
 
-              return provider.interactionFinished(
-                ctx.req,
-                ctx.res,
-                {
-                  login: {
-                    accountId: account.accountId,
-                    remember: true, // closing and reopening browser does not force new login
-                  },
-                },
-                {
-                  mergeWithLastSubmission: false,
-                }
-              );
-            } else {
-              console.warn('Invalid code for email', {
+        if (requestEmailCode === undefined) {
+          try {
+            const code = await signInCode.getCode(email);
+            await ses.sendEmail({
+              html: signInEmailHtml(code),
+              subject: signInEmailSubject,
+              text: signInEmailText(code),
+              toEmail: email,
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          if (await signInCode.checkCode(email, requestEmailCode)) {
+            console.info('Correct code for email', email);
+            const account = await Account.findByIDP(
+              IdentityProvider.EMAIL,
+              {
                 email,
-                requestEmailCode,
-              });
-            }
+                email_verified: true,
+              },
+              undefined
+            );
+
+            return provider.interactionFinished(
+              ctx.req,
+              ctx.res,
+              {
+                login: {
+                  accountId: account.accountId,
+                  remember: true, // closing and reopening browser does not force new login
+                },
+              },
+              {
+                mergeWithLastSubmission: false,
+              }
+            );
+          } else {
+            console.warn('Invalid code for email', {
+              email,
+              requestEmailCode,
+            });
           }
         }
+      }
+
+      if (
+        typeof params.bubblyIdentityProvider === 'string' &&
+        Object.values(IdentityProvider).includes(
+          <IdentityProvider>params.bubblyIdentityProvider
+        )
+      ) {
+        // Caller can indicate to skip choosing provider
+        return ctx.redirect(
+          `/oidc/interaction/${uid}/federated/${params.bubblyIdentityProvider}`
+        );
       }
 
       return (ctx.response.body = render(login(email), {
         uid,
         client,
       }));
-      // // Caller will indicate which to login with, for now default to Google
-      // return ctx.redirect(`/oidc/interaction/${uid}/federated/google`);
     } else if (prompt.name === 'consent' && params.client_id) {
       const client = await provider.Client.find(<string>params.client_id);
       // Show view with continue button, Chrome won't redirect otherwise

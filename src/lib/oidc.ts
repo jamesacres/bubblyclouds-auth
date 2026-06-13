@@ -289,6 +289,7 @@ const initProvider = ({
           client.clientAuthMethod === 'none')
       );
     },
+    extraParams: ['bubblyIdentityProvider', 'bubblyEmail'],
   };
 
   const provider = new Provider(issuer, configuration);
