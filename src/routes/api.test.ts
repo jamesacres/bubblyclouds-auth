@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import Koa from 'koa';
-import Router from 'koa-router';
+import Router from '@koa/router';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { IdentityProvider } from '../types/IdentityProvider';
 

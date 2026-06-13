@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { Context } from 'koa';
 import { koaBody as bodyParser } from 'koa-body';
-import Router from 'koa-router';
+import Router from '@koa/router';
 import { Account } from '../models/account';
 import { IdentityProvider } from '../types/IdentityProvider';
 import Provider, { errors } from 'oidc-provider';

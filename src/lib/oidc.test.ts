@@ -68,10 +68,9 @@ const makeOptions = () => ({
 });
 
 describe('initProvider', () => {
-  it('returns a Provider instance with app and callback', () => {
-    const provider = initProvider(makeOptions());
+  it('returns a Provider instance with callback', () => {
+    const { provider } = initProvider(makeOptions());
     expect(provider).toBeDefined();
-    expect(typeof provider.app).toBe('object');
     expect(typeof provider.callback).toBe('function');
   });
 

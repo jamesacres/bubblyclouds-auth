@@ -50,7 +50,7 @@ export const startTestServer = async (jwk?: JWK): Promise<TestServer> => {
   const ses = new Ses(TEST_APP_CONFIG.aws.ses);
   const signInCode = new SignInCode(TEST_APP_CONFIG.demoAccounts);
 
-  const provider = initProvider({
+  const { provider, cookieKeys } = initProvider({
     appConfig: TEST_APP_CONFIG,
     keys,
     ses,
@@ -60,6 +60,7 @@ export const startTestServer = async (jwk?: JWK): Promise<TestServer> => {
 
   const koaApp = new Koa();
   koaApp.proxy = true;
+  koaApp.keys = cookieKeys;
 
   // URL-rewriting middleware matching src/handlers/oidc.ts
   koaApp.use(async (ctx, next) => {
@@ -73,7 +74,7 @@ export const startTestServer = async (jwk?: JWK): Promise<TestServer> => {
     await next();
   });
 
-  koaApp.use(mount('/oidc', provider.app));
+  koaApp.use(mount('/oidc', provider));
 
   const server = http.createServer(koaApp.callback());
 

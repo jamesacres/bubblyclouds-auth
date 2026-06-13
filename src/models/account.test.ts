@@ -20,6 +20,8 @@ jest.unstable_mockModule('../adapters/dynamodb', () => ({
 jest.unstable_mockModule('nanoid', () => ({
   nanoid: jest.fn().mockReturnValue('generated-id'),
   customAlphabet: jest.fn().mockReturnValue(() => 'mocked'),
+  urlAlphabet:
+    'useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict',
 }));
 
 const baseProfile = {

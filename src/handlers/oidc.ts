@@ -52,8 +52,9 @@ const initServerlessHandler = async (): Promise<serverless.Handler> => {
       await next();
     });
 
-    const provider = initProvider(await oidcOptions());
-    koaApp.use(mount('/oidc', provider.app));
+    const { provider, cookieKeys } = initProvider(await oidcOptions());
+    koaApp.keys = cookieKeys;
+    koaApp.use(mount('/oidc', provider));
 
     serverlessHandler = serverless(koaApp);
   }

@@ -1,5 +1,6 @@
 import { koaBody as bodyParser } from 'koa-body';
-import Router, { RouterContext } from 'koa-router';
+import Router from '@koa/router';
+import type { RouterContext } from '@koa/router';
 import { Next } from 'koa';
 import { constants } from 'http2';
 import { Account } from '../models/account';

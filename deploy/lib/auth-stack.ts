@@ -273,7 +273,7 @@ export class AuthStack extends Stack {
       handler: 'handler',
       memorySize: 128,
       environment: {},
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_24_X,
       timeout: Duration.seconds(15),
       bundling: {
         externalModules: ['@aws-sdk/*'],

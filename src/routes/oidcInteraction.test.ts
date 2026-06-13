@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import Router from 'koa-router';
+import Router, { type Layer } from '@koa/router';
 import { IdentityProvider } from '../types/IdentityProvider';
 
 // --- Account mock ---
@@ -93,7 +93,7 @@ beforeEach(async () => {
 const getLayer = (path: string, method = 'GET') => {
   const router = getRouter();
   const layer = router.stack.find(
-    (l: Router.Layer) => l.path === path && l.methods.includes(method)
+    (l: Layer) => l.path === path && l.methods.includes(method)
   );
   if (!layer) throw new Error(`No layer for ${method} ${path}`);
   return layer.stack;

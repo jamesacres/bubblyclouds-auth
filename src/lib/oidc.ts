@@ -108,6 +108,7 @@ const initProvider = ({
         'zoneinfo',
       ],
     },
+    enableHttpPostMethods: true,
     features: {
       devInteractions: { enabled: false },
       resourceIndicators: {
@@ -330,17 +331,15 @@ const initProvider = ({
     }
   });
 
-  provider.on(
-    'server_error',
-    (ctx: KoaContextWithOIDC, err: errors.OIDCProviderError) => {
-      if (err?.status < constants.HTTP_STATUS_INTERNAL_SERVER_ERROR) {
-        console.warn(err);
-      } else {
-        console.error(err);
-      }
-      console.trace(err);
+  provider.on('server_error', (ctx: KoaContextWithOIDC, err: Error) => {
+    const status = (err as errors.OIDCProviderError)?.status;
+    if (status && status < constants.HTTP_STATUS_INTERNAL_SERVER_ERROR) {
+      console.warn(err);
+    } else {
+      console.error(err);
     }
-  );
+    console.trace(err);
+  });
 
   const federatedClients = new FederatedClients({
     serverUrl,
@@ -356,10 +355,19 @@ const initProvider = ({
     accountId: string
   ): Promise<boolean> => {
     if (token && accountId) {
-      const publicKey = await importJWK(
-        keys.find((key) => key.kty === 'RSA' && key.use === 'sig')! as JWK,
-        'RS256'
-      );
+      const signingKey = keys.find(
+        (key) => key.kty === 'RSA' && key.use === 'sig'
+      )!;
+      const {
+        d: _d,
+        p: _p,
+        q: _q,
+        dp: _dp,
+        dq: _dq,
+        qi: _qi,
+        ...publicJwk
+      } = signingKey;
+      const publicKey = await importJWK(publicJwk as JWK, 'RS256');
       const result = await jwtVerify(token, publicKey, { issuer }).catch(
         (e) => {
           console.warn(e);
@@ -383,7 +391,7 @@ const initProvider = ({
   };
   provider.use(api(verifyToken, federatedClients).routes());
 
-  return provider;
+  return { provider, cookieKeys: cookies.secretKeys };
 };
 
 export { initProvider };
