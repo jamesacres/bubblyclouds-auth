@@ -29,6 +29,13 @@ test('Auth Stack', () => {
           Code: { S3Key: expect.any(String) },
         },
       },
+      AuthRedirectFunctionC0CFE165: {
+        ...json.Resources.AuthRedirectFunctionC0CFE165,
+        Properties: {
+          ...json.Resources.AuthRedirectFunctionC0CFE165.Properties,
+          Code: { S3Key: expect.any(String) },
+        },
+      },
     },
   });
 });

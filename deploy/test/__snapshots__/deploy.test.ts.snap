@@ -2848,7 +2848,7 @@ exports[`Auth Stack 1`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-12345678-eu-west-2",
-          "S3Key": "cec063fe748da7d7ad74ada5ec86f05c6db74388e8f9cfa981ba346c9ea4eca6.zip",
+          "S3Key": Any<String>,
         },
         "FunctionName": "AuthRedirect",
         "Handler": "index.handler",
