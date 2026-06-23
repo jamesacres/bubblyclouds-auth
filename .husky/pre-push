@@ -14,8 +14,20 @@ echo ">>> [root] test"
 npm test
 
 echo ">>> [dynamodb] start"
+docker stop bubblyclouds-auth-dynamodb 2>/dev/null || true
 docker run --rm -d --name bubblyclouds-auth-dynamodb -p 8000:8000 amazon/dynamodb-local:latest
 trap 'docker stop bubblyclouds-auth-dynamodb 2>/dev/null || true' EXIT INT TERM
+
+echo ">>> [dynamodb] waiting for ready"
+i=0
+until nc -z localhost 8000 2>/dev/null; do
+  i=$((i + 1))
+  if [ $i -ge 30 ]; then
+    echo "DynamoDB failed to start within 30 seconds" >&2
+    exit 1
+  fi
+  sleep 1
+done
 
 echo ">>> [root] integration test"
 npm run test:integration
