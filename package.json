@@ -6,7 +6,7 @@
     "start": "npm --prefix ./deploy run cdk:synth && sam local start-api -t ./deploy/cdk.out/AuthStack.template.json",
     "start:ssl": "npx local-ssl-proxy --config local-ssl-proxy.json",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.integration.config.cjs --testPathPatterns=integration --runInBand",
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.integration.config.cjs --runInBand",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
