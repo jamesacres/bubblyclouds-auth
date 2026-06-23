@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "check:circular": "madge --circular --extensions ts src/",
+    "check:circular": "npx --yes madge --circular --extensions ts src/",
     "prepare": "husky"
   },
   "author": "James Acres",
@@ -36,16 +36,10 @@
     "husky": "^9.1.7",
     "jest": "^30.4.2",
     "jose": "^6.2.3",
-    "madge": "^8.0.0",
     "prettier": "^3.8.4",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
-  },
-  "overrides": {
-    "madge": {
-      "typescript": "^6.0.3"
-    }
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1075.0",
