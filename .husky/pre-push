@@ -1,0 +1,33 @@
+#!/bin/sh
+set -e
+
+echo ">>> [root] lint"
+npm run lint
+
+echo ">>> [root] typecheck"
+npm run typecheck
+
+echo ">>> [root] circular dependency check"
+npm run check:circular
+
+echo ">>> [root] test"
+npm test
+
+echo ">>> [dynamodb] start"
+docker run --rm -d --name bubblyclouds-auth-dynamodb -p 8000:8000 amazon/dynamodb-local:latest
+trap 'docker stop bubblyclouds-auth-dynamodb 2>/dev/null || true' EXIT INT TERM
+
+echo ">>> [root] integration test"
+npm run test:integration
+
+echo ">>> [deploy] lint"
+npm --prefix ./deploy run lint
+
+echo ">>> [deploy] build"
+npm --prefix ./deploy run build
+
+echo ">>> [deploy] circular dependency check"
+npm --prefix ./deploy run check:circular
+
+echo ">>> [deploy] test"
+npm --prefix ./deploy test

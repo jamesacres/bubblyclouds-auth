@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+echo ">>> [root] lint"
+npm run lint
+
+echo ">>> [root] typecheck"
+npm run typecheck
+
+echo ">>> [deploy] lint"
+npm --prefix ./deploy run lint

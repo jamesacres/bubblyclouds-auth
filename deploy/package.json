@@ -12,7 +12,13 @@
     "cdk:diff": "ENV=prod cdk diff",
     "cdk:synth": "ENV=dev cdk synth",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "check:circular": "madge --circular --extensions ts lib/"
+  },
+  "overrides": {
+    "madge": {
+      "typescript": "^6.0.3"
+    }
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -26,6 +32,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "jest": "^30.4.2",
+    "madge": "^8.0.0",
     "prettier": "^3.8.4",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
