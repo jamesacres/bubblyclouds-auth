@@ -1,7 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import Koa from 'koa';
 import Router from '@koa/router';
-import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { IdentityProvider } from '../types/IdentityProvider';
 
 const mockFederatedTokens = jest.fn();
@@ -14,53 +12,22 @@ jest.unstable_mockModule('../models/account', () => ({
   })),
 }));
 
-const mockAppleRevoke = jest.fn();
-const mockAppleClient = { revoke: mockAppleRevoke };
+const mockTokenRevocation = jest.fn();
+jest.unstable_mockModule('openid-client', () => ({
+  tokenRevocation: mockTokenRevocation,
+}));
+
+const mockAppleClient = {};
 const mockFederatedClientsInstance = {
   appleClient: jest.fn().mockResolvedValue(mockAppleClient as never),
 };
-
-const makeApp = async (verifyTokenResult: boolean) => {
-  const { api } = await import('./api');
-  const verifyToken = async (
-    _token: string | undefined,
-    _accountId: string
-  ): Promise<boolean> => verifyTokenResult;
-  const router = api(verifyToken, mockFederatedClientsInstance as never);
-  const app = new Koa();
-  app.use(router.routes());
-  app.use(router.allowedMethods());
-  return app;
-};
-
-const request = (
-  app: Koa,
-  method: string,
-  path: string,
-  headers: Record<string, string> = {}
-): Promise<{ status: number }> =>
-  new Promise((resolve) => {
-    const server = createServer(app.callback());
-    const req = Object.assign(new IncomingMessage(null as never), {
-      method,
-      url: path,
-      headers,
-    });
-    const res = Object.assign(new ServerResponse(req), {
-      end: (body?: unknown) => {
-        resolve({ status: (res as { statusCode: number }).statusCode });
-        server.close();
-      },
-    });
-    server.emit('request', req, res);
-  });
 
 describe('api routes', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     mockFederatedTokens.mockReset();
     mockDestroy.mockReset();
-    mockAppleRevoke.mockReset();
+    mockTokenRevocation.mockReset();
     mockFederatedClientsInstance.appleClient.mockResolvedValue(
       mockAppleClient as never
     );
@@ -210,7 +177,9 @@ describe('api routes', () => {
 
     it('extracts Bearer token and passes to verifyToken', async () => {
       const { api } = await import('./api');
-      const verifyToken = jest.fn(async () => false);
+      const verifyToken = jest.fn(
+        async (_token: string | undefined, _accountId: string) => false
+      );
       const router = api(verifyToken, mockFederatedClientsInstance as never);
       const layer = router.stack.find(
         (l) => l.path === '/api/account/:accountId/delete'
@@ -228,7 +197,9 @@ describe('api routes', () => {
 
     it('passes undefined token when auth type is not Bearer', async () => {
       const { api } = await import('./api');
-      const verifyToken = jest.fn(async () => false);
+      const verifyToken = jest.fn(
+        async (_token: string | undefined, _accountId: string) => false
+      );
       const router = api(verifyToken, mockFederatedClientsInstance as never);
       const layer = router.stack.find(
         (l) => l.path === '/api/account/:accountId/delete'
@@ -284,9 +255,10 @@ describe('api routes', () => {
       const handler = await getDeleteHandler();
       const ctx = makeCtx();
       await handler(ctx as never, jest.fn() as never);
-      expect(mockAppleRevoke).toHaveBeenCalledWith(
+      expect(mockTokenRevocation).toHaveBeenCalledWith(
+        expect.anything(),
         'refresh-tkn',
-        'refresh_token'
+        { token_type_hint: 'refresh_token' }
       );
       expect(ctx.status).toBe(204);
     });
@@ -299,7 +271,7 @@ describe('api routes', () => {
       const handler = await getDeleteHandler();
       const ctx = makeCtx();
       await handler(ctx as never, jest.fn() as never);
-      expect(mockAppleRevoke).not.toHaveBeenCalled();
+      expect(mockTokenRevocation).not.toHaveBeenCalled();
     });
 
     it('handles error when appleClient() call itself fails', async () => {

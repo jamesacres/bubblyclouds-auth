@@ -25,7 +25,7 @@ import {
   NodejsFunction,
   NodejsFunctionProps,
 } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -212,7 +212,7 @@ export class AuthStack extends Stack {
   private dynamodb() {
     const table = new Table(this, 'AuthTable', {
       partitionKey: { name: 'modelId', type: AttributeType.STRING },
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
       timeToLiveAttribute: 'expiresAt',
       deletionProtection: true,
       readCapacity: 10,
@@ -275,16 +275,20 @@ export class AuthStack extends Stack {
       environment: {},
       runtime: Runtime.NODEJS_24_X,
       timeout: Duration.seconds(15),
+      projectRoot: path.resolve(__dirname, '../..'),
       bundling: {
         externalModules: ['@aws-sdk/*'],
       },
-      logRetention: RetentionDays.ONE_WEEK,
     };
 
     const redirectFn = new NodejsFunction(this, `AuthRedirectFunction`, {
       ...config,
       entry: path.resolve(__dirname, '../../src/handlers/redirect.ts'),
       functionName: `AuthRedirect`,
+      logGroup: new LogGroup(this, 'AuthRedirectLogGroup', {
+        logGroupName: '/aws/lambda/AuthRedirect',
+        retention: RetentionDays.ONE_WEEK,
+      }),
     });
 
     const paramsAndSecrets = ParamsAndSecretsLayerVersion.fromVersion(
@@ -298,6 +302,10 @@ export class AuthStack extends Stack {
       memorySize: 512,
       entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
       functionName: `AuthOidc`,
+      logGroup: new LogGroup(this, 'AuthOidcLogGroup', {
+        logGroupName: '/aws/lambda/AuthOidc',
+        retention: RetentionDays.ONE_WEEK,
+      }),
       environment: {
         DEBUG: 'oidc-provider:*',
         OAUTH_TABLE: 'AuthStack-AuthTable0711E62F-15KG9EHHEGFYW',

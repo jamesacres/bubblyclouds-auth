@@ -3,7 +3,7 @@ import { AuthStack } from '../lib/auth-stack';
 import { Template } from 'aws-cdk-lib/assertions';
 
 test('Auth Stack', () => {
-  const app = new App();
+  const app = new App({ context: { 'aws:cdk:bundling-stacks': [] } });
   const authStack = new AuthStack(app, 'AuthStack', {
     env: {
       account: '12345678',

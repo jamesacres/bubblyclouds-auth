@@ -6,6 +6,7 @@ import { constants } from 'http2';
 import { Account } from '../models/account';
 import { IdentityProvider } from '../types/IdentityProvider';
 import { FederatedClients } from '../lib/federatedClients';
+import { tokenRevocation } from 'openid-client';
 
 export const api = (
   verifyToken: (
@@ -77,9 +78,10 @@ export const api = (
         try {
           // Revoke apple connection
           console.info('revoking apple connection');
-          (await federatedClients.appleClient()).revoke(
+          await tokenRevocation(
+            await federatedClients.appleClient(),
             appleTokens.refresh_token,
-            'refresh_token'
+            { token_type_hint: 'refresh_token' }
           );
         } catch (e) {
           console.error(e);

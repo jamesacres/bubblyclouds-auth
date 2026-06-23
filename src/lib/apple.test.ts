@@ -1,33 +1,28 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-const mockClient = { client_id: 'com.test.app' };
-const mockAppleIssuer = { Client: jest.fn().mockReturnValue(mockClient) };
-const mockDiscover = jest.fn().mockResolvedValue(mockAppleIssuer as never);
+const mockConfig = { clientId: 'com.test.app' };
+const mockDiscovery = jest.fn().mockResolvedValue(mockConfig as never);
 
 jest.unstable_mockModule('openid-client', () => ({
-  default: {
-    Issuer: {
-      discover: mockDiscover,
-    },
-  },
+  discovery: mockDiscovery,
+  ClientSecretPost: jest.fn().mockReturnValue({}),
 }));
 
 describe('getAppleClient', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
-    mockAppleIssuer.Client.mockReturnValue(mockClient);
-    mockDiscover.mockResolvedValue(mockAppleIssuer as never);
+    mockDiscovery.mockResolvedValue(mockConfig as never);
   });
 
-  it('returns an openid-client Client instance', async () => {
+  it('returns an openid-client Configuration instance', async () => {
     const { getAppleClient } = await import('./apple');
     const client = await getAppleClient(
       'com.test.app',
       'secret-jwt',
       'https://example.com/callback/apple'
     );
-    expect(client).toBe(mockClient);
+    expect(client).toBe(mockConfig);
   });
 
   it('discovers Apple OIDC configuration', async () => {
@@ -37,26 +32,33 @@ describe('getAppleClient', () => {
       'secret',
       'https://example.com/cb/apple'
     );
-    expect(mockDiscover).toHaveBeenCalledWith(
-      'https://appleid.apple.com/.well-known/openid-configuration'
+    expect(mockDiscovery).toHaveBeenCalledWith(
+      new URL('https://appleid.apple.com/.well-known/openid-configuration'),
+      'com.test.app',
+      expect.objectContaining({
+        client_secret: 'secret',
+        redirect_uris: ['https://example.com/cb/apple'],
+        grant_types: ['authorization_code'],
+        response_types: ['code'],
+      }),
+      expect.anything()
     );
   });
 
-  it('creates client with correct config', async () => {
+  it('creates config with correct client ID and secret', async () => {
     const { getAppleClient } = await import('./apple');
     await getAppleClient(
       'com.test.app',
       'my-secret',
       'https://example.com/cb/apple'
     );
-    expect(mockAppleIssuer.Client).toHaveBeenCalledWith(
+    expect(mockDiscovery).toHaveBeenCalledWith(
+      new URL('https://appleid.apple.com/.well-known/openid-configuration'),
+      'com.test.app',
       expect.objectContaining({
-        client_id: 'com.test.app',
         client_secret: 'my-secret',
-        redirect_uris: ['https://example.com/cb/apple'],
-        grant_types: ['authorization_code'],
-        response_types: ['code'],
-      })
+      }),
+      expect.anything()
     );
   });
 });

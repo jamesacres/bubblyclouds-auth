@@ -32,9 +32,8 @@ import crypto from 'crypto';
 import http from 'http';
 import type { JWK } from 'oidc-provider';
 import type { TestServer } from './setup/appServer';
-const { setupDynamoDB, teardownDynamoDB, clearTable } = await import(
-  './setup/dynamodb'
-);
+const { setupDynamoDB, teardownDynamoDB, clearTable } =
+  await import('./setup/dynamodb');
 import { startTestServer, generateTestJwk } from './setup/appServer';
 const {
   TEST_EMAIL,

@@ -24,22 +24,18 @@ jest.unstable_mockModule('../lib/ses', () => ({
   Ses: jest.fn().mockImplementation(() => ({ sendEmail: mockSendEmail })),
 }));
 
+// --- openid-client mock ---
+const mockBuildAuthorizationUrl = jest.fn();
+jest.unstable_mockModule('openid-client', () => ({
+  buildAuthorizationUrl: mockBuildAuthorizationUrl,
+}));
+
 // --- FederatedClients mock ---
-const mockGoogleAuthUrl = jest.fn();
-const mockGoogleCallbackParams = jest.fn();
 const mockGoogleIdTokenClaims = jest.fn();
-const mockAppleAuthUrl = jest.fn();
-const mockAppleCallbackParams = jest.fn();
 const mockAppleIdTokenClaims = jest.fn();
 const mockFederatedClients = {
-  googleClient: jest.fn().mockResolvedValue({
-    authorizationUrl: mockGoogleAuthUrl,
-    callbackParams: mockGoogleCallbackParams,
-  } as never),
-  appleClient: jest.fn().mockResolvedValue({
-    authorizationUrl: mockAppleAuthUrl,
-    callbackParams: mockAppleCallbackParams,
-  } as never),
+  googleClient: jest.fn().mockResolvedValue({} as never),
+  appleClient: jest.fn().mockResolvedValue({} as never),
   googleIdTokenClaims: mockGoogleIdTokenClaims,
   appleIdTokenClaims: mockAppleIdTokenClaims,
 };
@@ -388,14 +384,15 @@ describe('GET /interaction/:uid/federated/google', () => {
     mockInteractionDetails.mockResolvedValue({
       prompt: { name: 'login' },
     } as never);
-    mockGoogleAuthUrl.mockReturnValue(
-      'https://accounts.google.com/o/oauth2/auth?...'
+    mockBuildAuthorizationUrl.mockReturnValue(
+      new URL('https://accounts.google.com/o/oauth2/auth?...')
     );
 
     const ctx = makeCtx({ params: { uid: 'test-uid' } });
     await getHandler()(ctx as never, jest.fn() as never);
 
-    expect(mockGoogleAuthUrl).toHaveBeenCalledWith(
+    expect(mockBuildAuthorizationUrl).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({
         state: 'test-uid',
         scope: 'openid email profile',
@@ -411,7 +408,9 @@ describe('GET /interaction/:uid/federated/google', () => {
     mockInteractionDetails.mockResolvedValue({
       prompt: { name: 'login' },
     } as never);
-    mockGoogleAuthUrl.mockReturnValue('https://accounts.google.com/auth');
+    mockBuildAuthorizationUrl.mockReturnValue(
+      new URL('https://accounts.google.com/auth')
+    );
 
     const ctx = makeCtx({ params: { uid: 'test-uid' } });
     await getHandler()(ctx as never, jest.fn() as never);
@@ -448,14 +447,15 @@ describe('GET /interaction/:uid/federated/apple', () => {
     mockInteractionDetails.mockResolvedValue({
       prompt: { name: 'login' },
     } as never);
-    mockAppleAuthUrl.mockReturnValue(
-      'https://appleid.apple.com/auth/authorize?...'
+    mockBuildAuthorizationUrl.mockReturnValue(
+      new URL('https://appleid.apple.com/auth/authorize?...')
     );
 
     const ctx = makeCtx({ params: { uid: 'test-uid' } });
     await getHandler()(ctx as never, jest.fn() as never);
 
-    expect(mockAppleAuthUrl).toHaveBeenCalledWith(
+    expect(mockBuildAuthorizationUrl).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({
         state: 'test-uid',
         scope: 'openid email',
@@ -472,7 +472,9 @@ describe('GET /interaction/:uid/federated/apple', () => {
     mockInteractionDetails.mockResolvedValue({
       prompt: { name: 'login' },
     } as never);
-    mockAppleAuthUrl.mockReturnValue('https://appleid.apple.com/auth');
+    mockBuildAuthorizationUrl.mockReturnValue(
+      new URL('https://appleid.apple.com/auth')
+    );
 
     const ctx = makeCtx({ params: { uid: 'test-uid' } });
     await getHandler()(ctx as never, jest.fn() as never);
@@ -550,7 +552,6 @@ describe('POST /interaction/:uid/federated', () => {
   };
 
   it('finishes interaction after successful Google callback', async () => {
-    mockGoogleCallbackParams.mockReturnValue({ code: 'g-code', state: 'uid' });
     mockGoogleIdTokenClaims.mockResolvedValue({
       claims: { email: 'user@example.com', email_verified: true },
       federatedTokens: {},
@@ -583,7 +584,6 @@ describe('POST /interaction/:uid/federated', () => {
   });
 
   it('clears google.nonce cookie after callback', async () => {
-    mockGoogleCallbackParams.mockReturnValue({ code: 'g-code' });
     mockGoogleIdTokenClaims.mockResolvedValue({
       claims: {},
       federatedTokens: {},
@@ -607,7 +607,6 @@ describe('POST /interaction/:uid/federated', () => {
   });
 
   it('finishes interaction after successful Apple callback', async () => {
-    mockAppleCallbackParams.mockReturnValue({ code: 'a-code', state: 'uid' });
     mockAppleIdTokenClaims.mockResolvedValue({
       claims: { email: 'user@apple.com', email_verified: true },
       federatedTokens: {},
@@ -640,7 +639,6 @@ describe('POST /interaction/:uid/federated', () => {
   });
 
   it('clears apple.nonce cookie after callback', async () => {
-    mockAppleCallbackParams.mockReturnValue({ code: 'a-code' });
     mockAppleIdTokenClaims.mockResolvedValue({
       claims: {},
       federatedTokens: {},

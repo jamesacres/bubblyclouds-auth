@@ -6,7 +6,7 @@ import { Account } from '../models/account';
 import { IdentityProvider } from '../types/IdentityProvider';
 import Provider, { errors } from 'oidc-provider';
 import { constants } from 'http2';
-import { render } from 'ejs';
+import ejs from 'ejs';
 import { repost } from '../views/repost';
 import { login } from '../views/login';
 import { Ses } from '../lib/ses';
@@ -18,6 +18,7 @@ import {
 import { SignInCode } from '../lib/signInCode';
 import { FederatedClients } from '../lib/federatedClients';
 import { consent } from '../views/consent';
+import { buildAuthorizationUrl } from 'openid-client';
 
 export const oidcInteraction = (
   provider: Provider,
@@ -64,7 +65,7 @@ export const oidcInteraction = (
       switchUser?: string | string[];
     } = ctx.request.query || {};
     const requestBody: { email?: string; emailCode?: string } =
-      ctx.request.body || {};
+      (ctx.request.body as { email?: string; emailCode?: string }) || {};
 
     if (requestQuery.switchUser === 'true' && session?.cookie) {
       await provider.Session.adapter.destroy(session.cookie);
@@ -147,14 +148,14 @@ export const oidcInteraction = (
         );
       }
 
-      return (ctx.response.body = render(login(email), {
+      return (ctx.response.body = ejs.render(login(email), {
         uid,
         client,
       }));
     } else if (prompt.name === 'consent' && params.client_id) {
       const client = await provider.Client.find(<string>params.client_id);
       // Show view with continue button, Chrome won't redirect otherwise
-      return (ctx.response.body = render(consent(), {
+      return (ctx.response.body = ejs.render(consent(), {
         uid,
         client,
       }));
@@ -183,11 +184,11 @@ export const oidcInteraction = (
 
     ctx.status = 303;
     return ctx.redirect(
-      (await federatedClients.googleClient()).authorizationUrl({
+      buildAuthorizationUrl(await federatedClients.googleClient(), {
         state,
         nonce,
         scope: 'openid email profile',
-      })
+      }).href
     );
   });
 
@@ -210,19 +211,19 @@ export const oidcInteraction = (
 
     ctx.status = 303;
     return ctx.redirect(
-      (await federatedClients.appleClient()).authorizationUrl({
+      buildAuthorizationUrl(await federatedClients.appleClient(), {
         state,
         nonce,
         scope: 'openid email',
         response_mode: 'form_post',
-      })
+      }).href
     );
   });
 
   router.get('/interaction/callback/google', async (ctx: Context) => {
     // Callback page, will POST results to /interaction/:uid/federated
     const nonce = ctx.state.cspNonce;
-    ctx.response.body = render(repost(), {
+    ctx.response.body = ejs.render(repost(), {
       nonce,
       layout: false,
       upstream: IdentityProvider.GOOGLE,
@@ -231,12 +232,13 @@ export const oidcInteraction = (
 
   router.post('/interaction/callback/apple', body, async (ctx: Context) => {
     // Callback page, will POST results to /interaction/:uid/federated
-    const { state, code } = ctx.request.body || {};
+    const { state, code } =
+      (ctx.request.body as { state?: string; code?: string }) || {};
     if (!(state && code)) {
       throw new errors.InvalidRequest('unexpected request');
     }
     const nonce = ctx.state.cspNonce;
-    ctx.response.body = render(repost({ state, code }), {
+    ctx.response.body = ejs.render(repost({ state, code }), {
       nonce,
       layout: false,
       upstream: IdentityProvider.APPLE,
@@ -245,10 +247,10 @@ export const oidcInteraction = (
 
   router.post('/interaction/:uid/federated', body, async (ctx) => {
     // callback from repost
-    if (ctx.request.body?.upstream === IdentityProvider.GOOGLE) {
-      const callbackParams = (
-        await federatedClients.googleClient()
-      ).callbackParams(ctx.req);
+    if (
+      (ctx.request.body as { upstream?: string })?.upstream ===
+      IdentityProvider.GOOGLE
+    ) {
       const nonce = ctx.cookies.get('google.nonce') || '';
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('google.nonce', null, { path: thisPath });
@@ -257,7 +259,7 @@ export const oidcInteraction = (
         await federatedClients.googleIdTokenClaims(
           nonce,
           ctx.params.uid,
-          callbackParams
+          ctx.request.body as Record<string, string>
         );
       const account = await Account.findByIDP(
         IdentityProvider.GOOGLE,
@@ -280,10 +282,10 @@ export const oidcInteraction = (
       );
     }
 
-    if (ctx.request.body?.upstream === IdentityProvider.APPLE) {
-      const callbackParams = (
-        await federatedClients.appleClient()
-      ).callbackParams(ctx.req);
+    if (
+      (ctx.request.body as { upstream?: string })?.upstream ===
+      IdentityProvider.APPLE
+    ) {
       const nonce = ctx.cookies.get('apple.nonce') || '';
       const thisPath = `/oidc/interaction/${ctx.params.uid}/federated`;
       ctx.cookies.set('apple.nonce', null, { path: thisPath });
@@ -292,7 +294,7 @@ export const oidcInteraction = (
         await federatedClients.appleIdTokenClaims(
           nonce,
           ctx.params.uid,
-          callbackParams
+          ctx.request.body as Record<string, string>
         );
       const account = await Account.findByIDP(
         IdentityProvider.APPLE,

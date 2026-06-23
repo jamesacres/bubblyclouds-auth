@@ -1,6 +1,11 @@
 import { OAuth2Client as GoogleOAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
-import { CallbackParamsType, Client, IdTokenClaims } from 'openid-client';
+import {
+  Configuration,
+  IDToken,
+  implicitAuthentication,
+  authorizationCodeGrant,
+} from 'openid-client';
 import { AppConfig } from '../types/AppConfig';
 import { getAppleClient } from '../lib/apple';
 import { getGoogleClient } from '../lib/google';
@@ -14,12 +19,12 @@ export interface FederatedClientsConfig {
 }
 
 export class FederatedClients {
-  private _googleClient: Client | undefined;
-  private _appleClient: Client | undefined;
+  private _googleClient: Configuration | undefined;
+  private _appleClient: Configuration | undefined;
 
   constructor(private config: FederatedClientsConfig) {}
 
-  googleClient = async (): Promise<Client> => {
+  googleClient = async (): Promise<Configuration> => {
     if (!this._googleClient) {
       const {
         serverUrl,
@@ -36,41 +41,28 @@ export class FederatedClients {
   googleIdTokenClaims = async (
     nonce: string,
     uid: string,
-    callbackParams: CallbackParamsType
-  ): Promise<{ federatedTokens: FederatedTokens; claims: IdTokenClaims }> => {
+    callbackBody: Record<string, string>
+  ): Promise<{ federatedTokens: FederatedTokens; claims: IDToken }> => {
     try {
-      const tokenset = await (
-        await this.googleClient()
-      ).callback(undefined, callbackParams, {
+      const currentUrl = new URL(
+        'https://dummy?' + new URLSearchParams(callbackBody).toString()
+      );
+      const idToken = await implicitAuthentication(
+        await this.googleClient(),
+        currentUrl,
         nonce,
-        state: uid,
-        response_type: 'id_token',
-      });
+        { expectedState: uid }
+      );
       const googleOAuth2Client = new GoogleOAuth2Client();
       await googleOAuth2Client.verifyIdToken({
-        idToken: tokenset.id_token!,
+        idToken: callbackBody.id_token!,
         audience: this.config.federatedClients.google.clientId,
       });
-      const {
-        access_token,
-        token_type,
-        id_token,
-        refresh_token,
-        scope,
-        expires_at,
-        session_state,
-      } = tokenset;
       return {
         federatedTokens: {
-          access_token,
-          token_type,
-          id_token,
-          refresh_token,
-          scope,
-          expires_at,
-          session_state,
+          id_token: callbackBody.id_token,
         },
-        claims: tokenset.claims(),
+        claims: idToken,
       };
     } catch (e) {
       console.error(e);
@@ -78,7 +70,7 @@ export class FederatedClients {
     }
   };
 
-  appleClient = async (): Promise<Client> => {
+  appleClient = async (): Promise<Configuration> => {
     if (!this._appleClient) {
       const {
         serverUrl,
@@ -116,24 +108,30 @@ export class FederatedClients {
   appleIdTokenClaims = async (
     nonce: string,
     uid: string,
-    callbackParams: CallbackParamsType
-  ): Promise<{ federatedTokens: FederatedTokens; claims: IdTokenClaims }> => {
+    callbackBody: Record<string, string>
+  ): Promise<{ federatedTokens: FederatedTokens; claims: IDToken }> => {
     try {
-      const tokenset = await (
-        await this.appleClient()
-      ).callback(undefined, callbackParams, {
-        nonce,
-        state: uid,
-        response_type: 'code',
-      });
+      const { serverUrlProd, serverUrl } = this.config;
+      const redirectUri = `${serverUrlProd || serverUrl}/oidc/interaction/callback/apple`;
+      const currentUrl = new URL(
+        redirectUri + '?' + new URLSearchParams(callbackBody).toString()
+      );
+      const tokenset = await authorizationCodeGrant(
+        await this.appleClient(),
+        currentUrl,
+        {
+          expectedNonce: nonce,
+          expectedState: uid,
+        }
+      );
+      const claims = tokenset.claims();
       const {
         access_token,
         token_type,
         id_token,
         refresh_token,
         scope,
-        expires_at,
-        session_state,
+        expires_in,
       } = tokenset;
       return {
         federatedTokens: {
@@ -142,10 +140,11 @@ export class FederatedClients {
           id_token,
           refresh_token,
           scope,
-          expires_at,
-          session_state,
+          expires_at: expires_in
+            ? Math.floor(Date.now() / 1000) + expires_in
+            : undefined,
         },
-        claims: tokenset.claims(),
+        claims: claims!,
       };
     } catch (e) {
       console.error(e);

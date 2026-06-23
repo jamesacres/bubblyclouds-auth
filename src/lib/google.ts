@@ -1,20 +1,25 @@
-import openid, { Client } from 'openid-client';
+import {
+  Configuration,
+  discovery,
+  useIdTokenResponseType,
+} from 'openid-client';
 
-let googleClient: Client;
+let googleClient: Configuration;
 export const getGoogleClient = async (
   clientId: string,
   redirectUrl: string
 ) => {
   if (!googleClient) {
-    const google = await openid.Issuer.discover(
-      'https://accounts.google.com/.well-known/openid-configuration'
+    googleClient = await discovery(
+      new URL('https://accounts.google.com/.well-known/openid-configuration'),
+      clientId,
+      {
+        response_types: ['id_token'],
+        redirect_uris: [redirectUrl],
+        grant_types: ['implicit'],
+      }
     );
-    googleClient = new google.Client({
-      client_id: clientId,
-      response_types: ['id_token'],
-      redirect_uris: [redirectUrl],
-      grant_types: ['implicit'],
-    });
+    useIdTokenResponseType(googleClient);
   }
   return googleClient;
 };

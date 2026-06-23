@@ -1,25 +1,22 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-const mockGoogleClient = {
-  callback: jest.fn(),
-  authorizationUrl: jest
-    .fn()
-    .mockReturnValue('https://accounts.google.com/oauth2/auth'),
-};
+const mockGoogleConfig = {};
+const mockAppleConfig = {};
 
-const mockAppleClient = {
-  callback: jest.fn(),
-  authorizationUrl: jest
-    .fn()
-    .mockReturnValue('https://appleid.apple.com/auth/authorize'),
-};
+const mockImplicitAuthentication = jest.fn();
+const mockAuthorizationCodeGrant = jest.fn();
 
 jest.unstable_mockModule('./google', () => ({
-  getGoogleClient: jest.fn().mockResolvedValue(mockGoogleClient as never),
+  getGoogleClient: jest.fn().mockResolvedValue(mockGoogleConfig as never),
 }));
 
 jest.unstable_mockModule('./apple', () => ({
-  getAppleClient: jest.fn().mockResolvedValue(mockAppleClient as never),
+  getAppleClient: jest.fn().mockResolvedValue(mockAppleConfig as never),
+}));
+
+jest.unstable_mockModule('openid-client', () => ({
+  implicitAuthentication: mockImplicitAuthentication,
+  authorizationCodeGrant: mockAuthorizationCodeGrant,
 }));
 
 jest.unstable_mockModule('google-auth-library', () => ({
@@ -53,8 +50,8 @@ describe('FederatedClients', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockGoogleClient.callback.mockReset();
-    mockAppleClient.callback.mockReset();
+    mockImplicitAuthentication.mockReset();
+    mockAuthorizationCodeGrant.mockReset();
     ({ FederatedClients } = await import('./federatedClients'));
   });
 
@@ -62,7 +59,7 @@ describe('FederatedClients', () => {
     it('returns a google client', async () => {
       const fc = new FederatedClients(testConfig);
       const client = await fc.googleClient();
-      expect(client).toBe(mockGoogleClient);
+      expect(client).toBe(mockGoogleConfig);
     });
 
     it('caches the client on subsequent calls', async () => {
@@ -81,26 +78,18 @@ describe('FederatedClients', () => {
         email_verified: true,
         sub: 'google-sub',
       };
-      const mockTokenSet = {
-        id_token: 'google-id-token',
-        access_token: 'google-access-token',
-        token_type: 'Bearer',
-        refresh_token: undefined,
-        scope: 'openid email',
-        expires_at: 1234567890,
-        session_state: undefined,
-        claims: jest.fn().mockReturnValue(mockClaims),
-      };
-      mockGoogleClient.callback.mockResolvedValue(mockTokenSet as never);
+      mockImplicitAuthentication.mockResolvedValue(mockClaims as never);
 
       const fc = new FederatedClients(testConfig);
-      const result = await fc.googleIdTokenClaims('nonce-val', 'uid-val', {});
+      const result = await fc.googleIdTokenClaims('nonce-val', 'uid-val', {
+        id_token: 'google-id-token',
+      });
       expect(result.claims).toEqual(mockClaims);
       expect(result.federatedTokens.id_token).toBe('google-id-token');
     });
 
-    it('throws InvalidToken when callback fails', async () => {
-      mockGoogleClient.callback.mockRejectedValue(
+    it('throws InvalidToken when implicitAuthentication fails', async () => {
+      mockImplicitAuthentication.mockRejectedValue(
         new Error('invalid token') as never
       );
       const fc = new FederatedClients(testConfig);
@@ -114,7 +103,7 @@ describe('FederatedClients', () => {
     it('returns an apple client', async () => {
       const fc = new FederatedClients(testConfig);
       const client = await fc.appleClient();
-      expect(client).toBe(mockAppleClient);
+      expect(client).toBe(mockAppleConfig);
     });
 
     it('caches the client on subsequent calls', async () => {
@@ -185,21 +174,25 @@ describe('FederatedClients', () => {
         token_type: 'Bearer',
         refresh_token: 'apple-refresh-token',
         scope: undefined,
-        expires_at: undefined,
-        session_state: undefined,
+        expires_in: undefined,
         claims: jest.fn().mockReturnValue(mockClaims),
       };
-      mockAppleClient.callback.mockResolvedValue(mockTokenSet as never);
+      mockAuthorizationCodeGrant.mockResolvedValue(mockTokenSet as never);
 
       const fc = new FederatedClients(testConfig);
-      const result = await fc.appleIdTokenClaims('nonce-val', 'uid-val', {});
+      const result = await fc.appleIdTokenClaims('nonce-val', 'uid-val', {
+        code: 'apple-code',
+        state: 'uid-val',
+      });
       expect(result.claims).toEqual(mockClaims);
       expect(result.federatedTokens.id_token).toBe('apple-id-token');
       expect(result.federatedTokens.refresh_token).toBe('apple-refresh-token');
     });
 
-    it('throws when apple callback fails', async () => {
-      mockAppleClient.callback.mockRejectedValue(new Error('invalid') as never);
+    it('throws when apple authorizationCodeGrant fails', async () => {
+      mockAuthorizationCodeGrant.mockRejectedValue(
+        new Error('invalid') as never
+      );
       const fc = new FederatedClients(testConfig);
       await expect(fc.appleIdTokenClaims('nonce', 'uid', {})).rejects.toThrow();
     });
