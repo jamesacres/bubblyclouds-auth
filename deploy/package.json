@@ -11,8 +11,8 @@
     "cdk:deploy": "ENV=prod cdk deploy",
     "cdk:diff": "ENV=prod cdk diff",
     "cdk:synth": "ENV=dev cdk synth",
-    "lint": "eslint --config eslint.config.js .",
-    "lint:fix": "eslint --config eslint.config.js --fix .",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "check:circular": "npx --yes madge --circular --extensions ts lib/"
   },
   "devDependencies": {
