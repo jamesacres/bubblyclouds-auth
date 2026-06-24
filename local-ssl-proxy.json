@@ -9,8 +9,8 @@
   "AuthBubblyCloudsCom": {
     "source": 443,
     "target": 3000,
-    "key": "mkcert-key.pem",
-    "cert": "mkcert.pem",
+    "key": "auth.bubblyclouds.com-key.pem",
+    "cert": "auth.bubblyclouds.com.pem",
     "hostname": "auth.bubblyclouds.com"
   }
 }

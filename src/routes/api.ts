@@ -1,9 +1,12 @@
 import { koaBody as bodyParser } from 'koa-body';
-import Router from 'koa-router';
+import Router from '@koa/router';
+import type { RouterContext } from '@koa/router';
+import { Next } from 'koa';
 import { constants } from 'http2';
 import { Account } from '../models/account';
 import { IdentityProvider } from '../types/IdentityProvider';
 import { FederatedClients } from '../lib/federatedClients';
+import { tokenRevocation } from 'openid-client';
 
 export const api = (
   verifyToken: (
@@ -30,7 +33,10 @@ export const api = (
     try {
       await next();
     } catch (e) {
-      if (e?.status < constants.HTTP_STATUS_INTERNAL_SERVER_ERROR) {
+      if (
+        ((e as { status?: number })?.status ?? 500) <
+        constants.HTTP_STATUS_INTERNAL_SERVER_ERROR
+      ) {
         console.warn(e);
       } else {
         console.error(e);
@@ -40,7 +46,7 @@ export const api = (
     }
   });
 
-  const authMiddleware = async (ctx, next) => {
+  const authMiddleware = async (ctx: RouterContext, next: Next) => {
     const extractTokenFromHeader = (
       authorization: string | undefined
     ): string | undefined => {
@@ -72,9 +78,10 @@ export const api = (
         try {
           // Revoke apple connection
           console.info('revoking apple connection');
-          (await federatedClients.appleClient()).revoke(
+          await tokenRevocation(
+            await federatedClients.appleClient(),
             appleTokens.refresh_token,
-            'refresh_token'
+            { token_type_hint: 'refresh_token' }
           );
         } catch (e) {
           console.error(e);

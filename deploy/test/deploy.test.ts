@@ -3,7 +3,7 @@ import { AuthStack } from '../lib/auth-stack';
 import { Template } from 'aws-cdk-lib/assertions';
 
 test('Auth Stack', () => {
-  const app = new App();
+  const app = new App({ context: { 'aws:cdk:bundling-stacks': [] } });
   const authStack = new AuthStack(app, 'AuthStack', {
     env: {
       account: '12345678',
@@ -26,6 +26,13 @@ test('Auth Stack', () => {
         ...json.Resources.AuthOidcFunctionFEAD1639,
         Properties: {
           ...json.Resources.AuthOidcFunctionFEAD1639.Properties,
+          Code: { S3Key: expect.any(String) },
+        },
+      },
+      AuthRedirectFunctionC0CFE165: {
+        ...json.Resources.AuthRedirectFunctionC0CFE165,
+        Properties: {
+          ...json.Resources.AuthRedirectFunctionC0CFE165.Properties,
           Code: { S3Key: expect.any(String) },
         },
       },

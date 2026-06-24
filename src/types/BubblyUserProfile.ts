@@ -1,3 +1,3 @@
-import { UserinfoResponse } from 'openid-client';
+import type { UserInfoResponse } from 'openid-client';
 
-export interface BubblyUserProfile extends UserinfoResponse {}
+export type BubblyUserProfile = UserInfoResponse;

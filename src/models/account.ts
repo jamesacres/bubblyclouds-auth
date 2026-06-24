@@ -4,7 +4,7 @@ import {
   type Account as AccountInterface,
   type FindAccount,
 } from 'oidc-provider';
-import { IdTokenClaims } from 'openid-client';
+import { IDToken } from 'openid-client';
 import { nanoid } from 'nanoid';
 import { DynamoDBAdapter } from '../adapters/dynamodb';
 import { Model } from '../types/Model';
@@ -50,7 +50,7 @@ export class Account implements AccountInterface {
 
   static async findByIDP(
     provider: IdentityProvider,
-    claims: Partial<IdTokenClaims>,
+    claims: Partial<IDToken>,
     federatedTokens: FederatedTokens | undefined
   ) {
     console.info(claims);
@@ -59,7 +59,7 @@ export class Account implements AccountInterface {
       throw new errors.InvalidToken('account not found');
     }
     // Google IDP can return emails in original casing
-    const safeEmail = sanitiseEmail(claims.email);
+    const safeEmail = sanitiseEmail(String(claims.email));
 
     const newProfile: Omit<BubblyUserProfile, 'sub'> = {
       name: claims.name || safeEmail.split('@')[0],

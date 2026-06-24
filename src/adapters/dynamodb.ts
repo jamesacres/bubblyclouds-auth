@@ -60,23 +60,57 @@ import { backOff } from 'exponential-backoff';
 import { Model } from '../types/Model';
 import { BubblyAdapterPayload } from '../types/BubblyAdapterPayload';
 
-const TABLE_NAME = process.env.OAUTH_TABLE!;
-const TABLE_REGION = process.env.AWS_REGION;
+export interface DynamoDBAdapterConfig {
+  tableName: string;
+  region: string;
+  endpoint?: string;
+}
+
 const MAX_RETRIES = 5;
 
-const dynamoClient = DynamoDBDocumentClient.from(
-  new DynamoDBClient({
-    region: TABLE_REGION,
-  }),
-  {
-    marshallOptions: {
-      removeUndefinedValues: true,
-    },
+let adapterConfig: DynamoDBAdapterConfig | undefined;
+let dynamoClient: DynamoDBDocumentClient | undefined;
+
+const getConfig = (): DynamoDBAdapterConfig => {
+  if (!adapterConfig) {
+    throw new Error('DynamoDBAdapter.configure() must be called before use');
   }
-);
+  return adapterConfig;
+};
+
+const getClient = (): DynamoDBDocumentClient => {
+  if (!dynamoClient) {
+    const { region, endpoint } = getConfig();
+    dynamoClient = DynamoDBDocumentClient.from(
+      new DynamoDBClient({
+        region,
+        ...(endpoint
+          ? {
+              endpoint,
+              credentials: {
+                accessKeyId: 'local',
+                secretAccessKey: 'local',
+              },
+            }
+          : {}),
+      }),
+      {
+        marshallOptions: {
+          removeUndefinedValues: true,
+        },
+      }
+    );
+  }
+  return dynamoClient;
+};
 
 export class DynamoDBAdapter implements Adapter {
   name: string | Model;
+
+  static configure(config: DynamoDBAdapterConfig): void {
+    adapterConfig = config;
+    dynamoClient = undefined;
+  }
 
   constructor(name: string | Model) {
     this.name = name;
@@ -93,7 +127,7 @@ export class DynamoDBAdapter implements Adapter {
       : null;
 
     const params: UpdateCommandInput = {
-      TableName: TABLE_NAME,
+      TableName: getConfig().tableName,
       Key: { modelId: this.name + '-' + id },
       UpdateExpression:
         'SET payload = :payload' +
@@ -111,19 +145,19 @@ export class DynamoDBAdapter implements Adapter {
     };
     const command = new UpdateCommand(params);
 
-    await dynamoClient.send(command);
+    await getClient().send(command);
   }
 
   async find(id: string): Promise<BubblyAdapterPayload | undefined> {
     const params: GetCommandInput = {
-      TableName: TABLE_NAME,
+      TableName: getConfig().tableName,
       Key: { modelId: this.name + '-' + id },
       ProjectionExpression: 'payload, expiresAt',
     };
     const command = new GetCommand(params);
 
     const getResult = async () => {
-      const commandResult = await dynamoClient.send(command);
+      const commandResult = await getClient().send(command);
       const result = commandResult?.Item as
         | { payload: BubblyAdapterPayload; expiresAt?: number }
         | undefined;
@@ -169,7 +203,7 @@ export class DynamoDBAdapter implements Adapter {
     userCode: string
   ): Promise<BubblyAdapterPayload | undefined> {
     const params: QueryCommandInput = {
-      TableName: TABLE_NAME,
+      TableName: getConfig().tableName,
       IndexName: 'userCodeIndex',
       KeyConditionExpression: 'userCode = :userCode',
       ExpressionAttributeValues: {
@@ -181,7 +215,7 @@ export class DynamoDBAdapter implements Adapter {
     const command = new QueryCommand(params);
 
     const getResult = async () => {
-      const commandResult = await dynamoClient.send(command);
+      const commandResult = await getClient().send(command);
       const result = commandResult?.Items?.[0] as
         | { payload: BubblyAdapterPayload; expiresAt?: number }
         | undefined;
@@ -209,7 +243,7 @@ export class DynamoDBAdapter implements Adapter {
 
   async findByUid(uid: string): Promise<BubblyAdapterPayload | undefined> {
     const params: QueryCommandInput = {
-      TableName: TABLE_NAME,
+      TableName: getConfig().tableName,
       IndexName: 'uidIndex',
       KeyConditionExpression: 'uid = :uid',
       ExpressionAttributeValues: {
@@ -221,7 +255,7 @@ export class DynamoDBAdapter implements Adapter {
     const command = new QueryCommand(params);
 
     const getResult = async () => {
-      const commandResult = await dynamoClient.send(command);
+      const commandResult = await getClient().send(command);
       const result = commandResult?.Items?.[0] as
         | { payload: BubblyAdapterPayload; expiresAt?: number }
         | undefined;
@@ -249,7 +283,7 @@ export class DynamoDBAdapter implements Adapter {
 
   async consume(id: string): Promise<void> {
     const params: UpdateCommandInput = {
-      TableName: TABLE_NAME,
+      TableName: getConfig().tableName,
       Key: { modelId: this.name + '-' + id },
       UpdateExpression: 'SET #payload.#consumed = :value',
       ExpressionAttributeNames: {
@@ -263,17 +297,17 @@ export class DynamoDBAdapter implements Adapter {
     };
     const command = new UpdateCommand(params);
 
-    await dynamoClient.send(command);
+    await getClient().send(command);
   }
 
   async destroy(id: string): Promise<void> {
     const params: DeleteCommandInput = {
-      TableName: TABLE_NAME,
+      TableName: getConfig().tableName,
       Key: { modelId: this.name + '-' + id },
     };
     const command = new DeleteCommand(params);
 
-    await dynamoClient.send(command);
+    await getClient().send(command);
   }
 
   async revokeByGrantId(grantId: string): Promise<void> {
@@ -282,7 +316,7 @@ export class DynamoDBAdapter implements Adapter {
 
     do {
       const params: QueryCommandInput = {
-        TableName: TABLE_NAME,
+        TableName: getConfig().tableName,
         IndexName: 'grantIdIndex',
         KeyConditionExpression: 'grantId = :grantId',
         ExpressionAttributeValues: {
@@ -294,7 +328,7 @@ export class DynamoDBAdapter implements Adapter {
       };
       const queryCommand = new QueryCommand(params);
 
-      const queryResult = await dynamoClient.send(queryCommand);
+      const queryResult = await getClient().send(queryCommand);
       ExclusiveStartKey = queryResult.LastEvaluatedKey;
 
       const items = <{ modelId: string }[] | undefined>queryResult.Items;
@@ -305,14 +339,14 @@ export class DynamoDBAdapter implements Adapter {
 
       const batchWriteParams: BatchWriteCommandInput = {
         RequestItems: {
-          [TABLE_NAME]: items.map((item) => ({
+          [getConfig().tableName]: items.map((item) => ({
             DeleteRequest: { Key: { modelId: item.modelId } },
           })),
         },
       };
       const command = new BatchWriteCommand(batchWriteParams);
 
-      await dynamoClient.send(command);
+      await getClient().send(command);
     } while (ExclusiveStartKey);
   }
 }

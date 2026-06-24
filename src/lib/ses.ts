@@ -1,13 +1,15 @@
 import {
   SESv2Client,
+  SESv2ClientConfig,
   SendEmailCommand,
   SendEmailCommandInput,
 } from '@aws-sdk/client-sesv2';
 
-export class SesConfig {
+export interface SesConfig {
   fromName: string;
   fromEmail: string;
   fromArn: string;
+  aws?: SESv2ClientConfig;
 }
 
 export class Ses {
@@ -24,7 +26,7 @@ export class Ses {
     text: string;
     toEmail: string;
   }): Promise<void> => {
-    const client = new SESv2Client();
+    const client = new SESv2Client(this.config.aws || []);
     const input: SendEmailCommandInput = {
       FromEmailAddress: `${this.config.fromName} <${this.config.fromEmail}>`,
       FromEmailAddressIdentityArn: this.config.fromArn,

@@ -1,2 +1,10 @@
 node_modules
+sam-env.json
 .env
+.serena
+.claude
+.gemini
+.kiro/settings
+.kiro/skills
+.vscode
+

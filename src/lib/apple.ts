@@ -1,22 +1,23 @@
-import openid, { Client } from 'openid-client';
+import { Configuration, ClientSecretPost, discovery } from 'openid-client';
 
-let appleClient: Client;
+let appleClient: Configuration;
 export const getAppleClient = async (
   clientId: string,
   clientSecret: string,
   redirectUrl: string
 ) => {
   if (!appleClient) {
-    const apple = await openid.Issuer.discover(
-      'https://appleid.apple.com/.well-known/openid-configuration'
+    appleClient = await discovery(
+      new URL('https://appleid.apple.com/.well-known/openid-configuration'),
+      clientId,
+      {
+        client_secret: clientSecret,
+        response_types: ['code'],
+        redirect_uris: [redirectUrl],
+        grant_types: ['authorization_code'],
+      },
+      ClientSecretPost(clientSecret)
     );
-    appleClient = new apple.Client({
-      client_id: clientId,
-      client_secret: clientSecret,
-      response_types: ['code'],
-      redirect_uris: [redirectUrl],
-      grant_types: ['authorization_code'],
-    });
   }
   return appleClient;
 };

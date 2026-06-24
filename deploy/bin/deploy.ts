@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
+import 'dotenv/config';
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { AuthStack } from '../lib/auth-stack';

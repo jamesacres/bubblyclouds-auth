@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { Context } from 'aws-lambda';
 import { handler } from './redirect';
 
