@@ -2641,7 +2641,9 @@ exports[`Auth Stack 1`] = `
               ],
             },
             "DEBUG": "oidc-provider:*",
-            "OAUTH_TABLE": "AuthStack-AuthTable0711E62F-15KG9EHHEGFYW",
+            "OAUTH_TABLE": {
+              "Ref": "AuthTable0711E62F",
+            },
             "PARAMETERS_SECRETS_EXTENSION_CACHE_ENABLED": "true",
             "PARAMETERS_SECRETS_EXTENSION_CACHE_SIZE": "1000",
             "PARAMETERS_SECRETS_EXTENSION_HTTP_PORT": "2773",

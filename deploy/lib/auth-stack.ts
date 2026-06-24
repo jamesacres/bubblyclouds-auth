@@ -51,16 +51,17 @@ export class AuthStack extends Stack {
     });
 
     const appConfig = this.appConfig(props.appConfig);
+    const { table } = this.dynamodb();
     const { oidc, redirect } = this.lambdas({
       appConfig,
       accountId: props.env!.account!,
       region: props.env!.region!,
+      oauthTable: table.tableName,
     });
 
     const { sigRSA } = this.secrets();
     sigRSA.grantRead(oidc.fn);
 
-    const { table } = this.dynamodb();
     table.grantReadWriteData(oidc.fn);
 
     // GET /
@@ -263,6 +264,7 @@ export class AuthStack extends Stack {
   private lambdas(options: {
     accountId: string;
     region: string;
+    oauthTable: string;
     appConfig: {
       application: CfnApplication;
       environment: CfnEnvironment;
@@ -308,7 +310,7 @@ export class AuthStack extends Stack {
       }),
       environment: {
         DEBUG: 'oidc-provider:*',
-        OAUTH_TABLE: 'AuthStack-AuthTable0711E62F-15KG9EHHEGFYW',
+        OAUTH_TABLE: options.oauthTable,
         // https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions.html
         AWS_APPCONFIG_EXTENSION_PREFETCH_LIST: Fn.sub(
           '/applications/${applicationId}/environments/${environmentId}/configurations/${configurationId}',

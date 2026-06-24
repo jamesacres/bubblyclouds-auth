@@ -14,7 +14,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for module responsibilities, dependency
 
 ## Quick Start
 
-**Prerequisites:** Node.js 20, npm, AWS SAM CLI (for local runs)
+**Prerequisites:** Node.js 24, npm, AWS SAM CLI (for local runs)
 
 ```bash
 npm install
@@ -94,16 +94,16 @@ bubblyclouds-auth/
 
 ## Tech Stack
 
-- **Runtime:** Node.js 20 on AWS Lambda
-- **HTTP framework:** Koa 2 + koa-router, wrapped by `serverless-http`
-- **OIDC protocol:** `oidc-provider` v8
+- **Runtime:** Node.js 24 on AWS Lambda
+- **HTTP framework:** Koa 3 + koa-router, wrapped by `serverless-http`
+- **OIDC protocol:** `oidc-provider` v9
 - **Persistence:** AWS DynamoDB (single table)
 - **Email:** AWS SES v2 (magic sign-in codes)
 - **Federated identity:** `openid-client` (Google, Apple) + `google-auth-library`
 - **Configuration:** AWS AppConfig (runtime config), AWS Secrets Manager (RSA signing key)
 - **Infrastructure:** AWS CDK v2 (TypeScript)
-- **Language:** TypeScript 5, ESM (`"type": "module"`)
-- **Testing:** Jest 29 with `ts-jest` and ESM mode
+- **Language:** TypeScript 6, ESM (`"type": "module"`)
+- **Testing:** Jest 30 with `ts-jest` and ESM mode
 - **Linting:** ESLint + Prettier
 
 ## Configuration
