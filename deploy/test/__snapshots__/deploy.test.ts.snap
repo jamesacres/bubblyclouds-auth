@@ -2837,7 +2837,7 @@ exports[`Auth Stack 1`] = `
     "AuthOidcLogGroup6AD97287": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "LogGroupName": "/aws/lambda/AuthOidc",
+        "LogGroupName": "AuthOidc",
         "RetentionInDays": 7,
       },
       "Type": "AWS::Logs::LogGroup",
@@ -2905,7 +2905,7 @@ exports[`Auth Stack 1`] = `
     "AuthRedirectLogGroupD3551DB7": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "LogGroupName": "/aws/lambda/AuthRedirect",
+        "LogGroupName": "AuthRedirect",
         "RetentionInDays": 7,
       },
       "Type": "AWS::Logs::LogGroup",

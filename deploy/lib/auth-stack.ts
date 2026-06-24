@@ -288,7 +288,7 @@ export class AuthStack extends Stack {
       entry: path.resolve(__dirname, '../../src/handlers/redirect.ts'),
       functionName: `AuthRedirect`,
       logGroup: new LogGroup(this, 'AuthRedirectLogGroup', {
-        logGroupName: '/aws/lambda/AuthRedirect',
+        logGroupName: 'AuthRedirect',
         retention: RetentionDays.ONE_WEEK,
       }),
     });
@@ -305,7 +305,7 @@ export class AuthStack extends Stack {
       entry: path.resolve(__dirname, '../../src/handlers/oidc.ts'),
       functionName: `AuthOidc`,
       logGroup: new LogGroup(this, 'AuthOidcLogGroup', {
-        logGroupName: '/aws/lambda/AuthOidc',
+        logGroupName: 'AuthOidc',
         retention: RetentionDays.ONE_WEEK,
       }),
       environment: {
