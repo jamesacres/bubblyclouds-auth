@@ -36,6 +36,16 @@ const mockAppleIdTokenClaims = jest.fn();
 const mockFederatedClients = {
   googleClient: jest.fn().mockResolvedValue({} as never),
   appleClient: jest.fn().mockResolvedValue({} as never),
+  googleRedirectUri: jest
+    .fn()
+    .mockReturnValue(
+      'https://auth.example.com/oidc/interaction/callback/google'
+    ),
+  appleRedirectUri: jest
+    .fn()
+    .mockReturnValue(
+      'https://auth.example.com/oidc/interaction/callback/apple'
+    ),
   googleIdTokenClaims: mockGoogleIdTokenClaims,
   appleIdTokenClaims: mockAppleIdTokenClaims,
 };
@@ -659,6 +669,153 @@ describe('POST /interaction/:uid/federated', () => {
     expect(ctx.cookies.set).toHaveBeenCalledWith('apple.nonce', null, {
       path: '/oidc/interaction/test-uid/federated',
     });
+  });
+
+  it('calls googleIdTokenClaims with nonce from cookie, uid, and request body', async () => {
+    mockGoogleIdTokenClaims.mockResolvedValue({
+      claims: { email: 'user@example.com', email_verified: true },
+      federatedTokens: {},
+    } as never);
+    mockFindByIDP.mockResolvedValue({ accountId: 'acct-google' } as never);
+    mockInteractionFinished.mockResolvedValue(undefined as never);
+
+    const requestBody = {
+      upstream: IdentityProvider.GOOGLE,
+      id_token: 'google-id-token-value',
+    };
+    const ctx = makeCtx({
+      params: { uid: 'my-uid' },
+      request: { query: {}, body: requestBody, header: {} },
+      cookies: {
+        get: jest.fn().mockReturnValue('stored-google-nonce'),
+        set: jest.fn(),
+      },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(mockGoogleIdTokenClaims).toHaveBeenCalledWith(
+      'stored-google-nonce',
+      'my-uid',
+      requestBody
+    );
+  });
+
+  it('calls appleIdTokenClaims with nonce from cookie, uid, and request body', async () => {
+    mockAppleIdTokenClaims.mockResolvedValue({
+      claims: { email: 'user@apple.com', email_verified: true },
+      federatedTokens: {},
+    } as never);
+    mockFindByIDP.mockResolvedValue({ accountId: 'acct-apple' } as never);
+    mockInteractionFinished.mockResolvedValue(undefined as never);
+
+    const requestBody = {
+      upstream: IdentityProvider.APPLE,
+      code: 'apple-auth-code',
+      state: 'my-uid',
+    };
+    const ctx = makeCtx({
+      params: { uid: 'my-uid' },
+      request: { query: {}, body: requestBody, header: {} },
+      cookies: {
+        get: jest.fn().mockReturnValue('stored-apple-nonce'),
+        set: jest.fn(),
+      },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(mockAppleIdTokenClaims).toHaveBeenCalledWith(
+      'stored-apple-nonce',
+      'my-uid',
+      requestBody
+    );
+  });
+
+  it('propagates error when googleIdTokenClaims throws', async () => {
+    mockGoogleIdTokenClaims.mockRejectedValue(
+      new Error('invalid google id_token') as never
+    );
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: {
+        query: {},
+        body: { upstream: IdentityProvider.GOOGLE },
+        header: {},
+      },
+    });
+    await expect(
+      getHandler()(ctx as never, jest.fn() as never)
+    ).rejects.toThrow('invalid google id_token');
+  });
+
+  it('propagates error when appleIdTokenClaims throws', async () => {
+    mockAppleIdTokenClaims.mockRejectedValue(
+      new Error('invalid apple id_token') as never
+    );
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: {
+        query: {},
+        body: { upstream: IdentityProvider.APPLE },
+        header: {},
+      },
+    });
+    await expect(
+      getHandler()(ctx as never, jest.fn() as never)
+    ).rejects.toThrow('invalid apple id_token');
+  });
+
+  it('uses empty string nonce when google.nonce cookie is absent', async () => {
+    mockGoogleIdTokenClaims.mockResolvedValue({
+      claims: {},
+      federatedTokens: {},
+    } as never);
+    mockFindByIDP.mockResolvedValue({ accountId: 'acct-1' } as never);
+    mockInteractionFinished.mockResolvedValue(undefined as never);
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: {
+        query: {},
+        body: { upstream: IdentityProvider.GOOGLE },
+        header: {},
+      },
+      cookies: { get: jest.fn().mockReturnValue(undefined), set: jest.fn() },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(mockGoogleIdTokenClaims).toHaveBeenCalledWith(
+      '',
+      'test-uid',
+      expect.anything()
+    );
+  });
+
+  it('uses empty string nonce when apple.nonce cookie is absent', async () => {
+    mockAppleIdTokenClaims.mockResolvedValue({
+      claims: {},
+      federatedTokens: {},
+    } as never);
+    mockFindByIDP.mockResolvedValue({ accountId: 'acct-2' } as never);
+    mockInteractionFinished.mockResolvedValue(undefined as never);
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: {
+        query: {},
+        body: { upstream: IdentityProvider.APPLE },
+        header: {},
+      },
+      cookies: { get: jest.fn().mockReturnValue(undefined), set: jest.fn() },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(mockAppleIdTokenClaims).toHaveBeenCalledWith(
+      '',
+      'test-uid',
+      expect.anything()
+    );
   });
 
   it('throws InvalidRequest when upstream is unrecognised', async () => {

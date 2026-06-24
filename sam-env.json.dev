@@ -1,0 +1,5 @@
+{
+  "AuthOidcFunctionXXX": {
+    "OAUTH_TABLE": "AuthStack-AuthTableXXX-XXX"
+  }
+}

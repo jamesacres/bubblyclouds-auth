@@ -24,16 +24,21 @@ export class FederatedClients {
 
   constructor(private config: FederatedClientsConfig) {}
 
+  googleRedirectUri = (): string => {
+    return `${this.config.serverUrl}/oidc/interaction/callback/google`;
+  };
+
   googleClient = async (): Promise<Configuration> => {
     if (!this._googleClient) {
       const {
-        serverUrl,
         federatedClients: {
           google: { clientId },
         },
       } = this.config;
-      const callbackUrl = `${serverUrl}/oidc/interaction/callback/google`;
-      this._googleClient = await getGoogleClient(clientId, callbackUrl);
+      this._googleClient = await getGoogleClient(
+        clientId,
+        this.googleRedirectUri()
+      );
     }
     return this._googleClient;
   };
@@ -45,7 +50,7 @@ export class FederatedClients {
   ): Promise<{ federatedTokens: FederatedTokens; claims: IDToken }> => {
     try {
       const currentUrl = new URL(
-        'https://dummy?' + new URLSearchParams(callbackBody).toString()
+        'https://dummy#' + new URLSearchParams(callbackBody).toString()
       );
       const idToken = await implicitAuthentication(
         await this.googleClient(),
@@ -70,11 +75,13 @@ export class FederatedClients {
     }
   };
 
+  appleRedirectUri = (): string => {
+    return `${this.config.serverUrlProd || this.config.serverUrl}/oidc/interaction/callback/apple`;
+  };
+
   appleClient = async (): Promise<Configuration> => {
     if (!this._appleClient) {
       const {
-        serverUrl,
-        serverUrlProd,
         federatedClients: {
           apple: { teamId, clientId, privateKey, keyId },
         },
@@ -95,11 +102,10 @@ export class FederatedClients {
           },
         }
       );
-      const callbackUrl = `${serverUrlProd || serverUrl}/oidc/interaction/callback/apple`;
       this._appleClient = await getAppleClient(
         clientId,
         clientSecret,
-        callbackUrl
+        this.appleRedirectUri()
       );
     }
     return this._appleClient;
@@ -111,10 +117,10 @@ export class FederatedClients {
     callbackBody: Record<string, string>
   ): Promise<{ federatedTokens: FederatedTokens; claims: IDToken }> => {
     try {
-      const { serverUrlProd, serverUrl } = this.config;
-      const redirectUri = `${serverUrlProd || serverUrl}/oidc/interaction/callback/apple`;
       const currentUrl = new URL(
-        redirectUri + '?' + new URLSearchParams(callbackBody).toString()
+        this.appleRedirectUri() +
+          '?' +
+          new URLSearchParams(callbackBody).toString()
       );
       const tokenset = await authorizationCodeGrant(
         await this.appleClient(),

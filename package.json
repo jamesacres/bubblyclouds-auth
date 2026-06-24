@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Auth Service for Bubbly Clouds",
   "scripts": {
-    "start": "npm --prefix ./deploy run cdk:synth && node scripts/strip-layers.js ./deploy/cdk.out/AuthStack.template.json ./deploy/cdk.out/AuthStack.local.template.json && sam local start-api -t ./deploy/cdk.out/AuthStack.local.template.json --skip-pull-image",
+    "start": "npm --prefix ./deploy run cdk:synth && sam local start-api -t ./deploy/cdk.out/AuthStack.template.json --env-vars sam-env.json",
     "start:appconfig": "node scripts/local-appconfig.js",
     "start:ssl": "npx local-ssl-proxy --config local-ssl-proxy.json",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",

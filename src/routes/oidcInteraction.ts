@@ -188,6 +188,7 @@ export const oidcInteraction = (
         state,
         nonce,
         scope: 'openid email profile',
+        redirect_uri: federatedClients.googleRedirectUri(),
       }).href
     );
   });
@@ -216,6 +217,7 @@ export const oidcInteraction = (
         nonce,
         scope: 'openid email',
         response_mode: 'form_post',
+        redirect_uri: federatedClients.appleRedirectUri(),
       }).href
     );
   });

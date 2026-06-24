@@ -20,6 +20,9 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for module responsibilities, dependency
 npm install
 cd deploy && npm install && cd ..
 
+# Copy the dev env template and fill in your local table name
+cp sam-env.json.dev sam-env.json
+
 # Run locally (requires SAM CLI and a synthesised CDK template)
 npm start
 
