@@ -1054,7 +1054,7 @@ describe('HTML responses', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('text/html');
-    expect(res.body).toContain('Bubbly Clouds Sign in');
+    expect(res.body).toContain('Bubbly Clouds – Sign in');
     expect(res.body).toContain('Sign in with Google');
     expect(res.body).toContain('Sign in with Apple');
     expect(res.body).toContain('your@email.com');
