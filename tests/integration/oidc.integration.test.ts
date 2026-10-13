@@ -19,6 +19,7 @@ import {
   describe,
   it,
   expect,
+  jest,
 } from '@jest/globals';
 
 // ─── Environment variables must be set before any src imports ───────────────
@@ -35,6 +36,7 @@ import type { TestServer } from './setup/appServer';
 const { setupDynamoDB, teardownDynamoDB, clearTable } =
   await import('./setup/dynamodb');
 import { startTestServer, generateTestJwk } from './setup/appServer';
+import { SignInCode } from '../../src/lib/signInCode.js';
 const {
   TEST_EMAIL,
   TEST_SIGN_IN_CODE,
@@ -1284,3 +1286,98 @@ async function performEmailSignIn(
 
   return { authCode, codeVerifier, finalCookies: cookies };
 }
+
+// ─── 9. Switch user ──────────────────────────────────────────────────────────
+
+describe('Switch user', () => {
+  const OTHER_EMAIL = 'other+user@example.com';
+  const absolute = (location: string) =>
+    location.startsWith('http') ? location : `${testServer.baseUrl}${location}`;
+
+  it('sends a sign-in code to the hinted user after switching away from the cookie session', async () => {
+    // getCode is called immediately before the sign-in email is sent
+    const getCode = jest.spyOn(SignInCode.prototype, 'getCode');
+
+    const startAuth = (extra: Record<string, string> = {}) =>
+      httpRequest(
+        `${testServer.baseUrl}/oidc/auth?${new URLSearchParams({
+          response_type: 'code',
+          client_id: TEST_NATIVE_CLIENT_ID,
+          redirect_uri: 'com.bubblyclouds.sudoku://-/auth',
+          scope: 'openid profile offline_access',
+          resource: TEST_RESOURCE,
+          prompt: 'consent',
+          code_challenge: generateCodeChallenge(generateCodeVerifier()),
+          code_challenge_method: 'S256',
+          state: 'test-state-switch-user',
+          ...extra,
+        }).toString()}`,
+        { cookies }
+      );
+
+    // Step 1: sign in as the first user so the browser holds a session cookie
+    let cookies = '';
+    let res = await startAuth();
+    cookies = extractCookies(res, cookies);
+    const uid = extractInteractionUid(res.headers.location as string);
+    res = await httpRequest(`${testServer.baseUrl}/oidc/interaction/${uid}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        email: TEST_EMAIL,
+        emailCode: TEST_SIGN_IN_CODE,
+      }).toString(),
+      cookies,
+    });
+    expect([302, 303]).toContain(res.status);
+    cookies = extractCookies(res, cookies);
+    // Resume the auth request, this is what writes the session cookie
+    res = await httpRequest(absolute(res.headers.location as string), {
+      cookies,
+    });
+    cookies = extractCookies(res, cookies);
+    getCode.mockClear();
+
+    // Step 2: another auth request hinting at a different user. The cookie
+    // session satisfies login, so we land on the consent page as the first user.
+    res = await startAuth({ bubblyEmail: OTHER_EMAIL });
+    cookies = extractCookies(res, cookies);
+    const consentLocation = res.headers.location as string;
+    expect(consentLocation).toContain('/oidc/interaction/');
+    res = await httpRequest(absolute(consentLocation), {
+      cookies,
+    });
+    cookies = extractCookies(res, cookies);
+    expect(res.status).toBe(200);
+    expect(res.body).toContain('switchUser=true');
+    expect(getCode).not.toHaveBeenCalled();
+
+    // Step 3: press "switch user"
+    res = await httpRequest(`${absolute(consentLocation)}?switchUser=true`, {
+      cookies,
+    });
+    cookies = extractCookies(res, cookies);
+    expect([302, 303]).toContain(res.status);
+    const authLocation = res.headers.location as string;
+    expect(authLocation).toContain('/oidc/auth');
+
+    res = await httpRequest(absolute(authLocation), {
+      cookies,
+    });
+    cookies = extractCookies(res, cookies);
+    expect(res.status).toBe(303);
+    const loginLocation = res.headers.location as string;
+    expect(loginLocation).toContain('/oidc/interaction/');
+
+    res = await httpRequest(absolute(loginLocation), {
+      cookies,
+    });
+
+    // The login page for the hinted user is shown and their code is sent
+    expect(res.status).toBe(200);
+    expect(res.body).not.toContain('switchUser=true');
+    expect(getCode).toHaveBeenCalledWith(OTHER_EMAIL);
+
+    getCode.mockRestore();
+  }, 60000);
+});

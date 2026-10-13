@@ -72,11 +72,13 @@ export const oidcInteraction = (
 
     if (requestQuery.switchUser === 'true' && session?.cookie) {
       await provider.Session.adapter.destroy(session.cookie);
-      return ctx.response.redirect(
-        `/oidc/auth?${Object.keys(params)
-          .map((key) => `${key}=${params[key]}`)
-          .join('&')}`
-      );
+      const authParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (typeof value === 'string') {
+          authParams.set(key, value);
+        }
+      }
+      return ctx.response.redirect(`/oidc/auth?${authParams.toString()}`);
     }
     if (prompt.name === 'login' && params.client_id) {
       const client = await provider.Client.find(<string>params.client_id);
