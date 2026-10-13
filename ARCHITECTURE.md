@@ -11,7 +11,8 @@ src/
 ├── adapters/        Database adapter (DynamoDB ↔ oidc-provider)
 ├── models/          Domain model (Account: find/create users, emit claims)
 ├── routes/          Koa routers (interaction UI, account API)
-├── views/           EJS templates returned as HTML strings
+├── views/           EJS templates returned as HTML strings (localised)
+├── locales/         One typed message catalog per supported language
 ├── types/           Shared TypeScript interfaces and enums
 └── utils/           Pure helpers (email sanitisation, random codes, secrets)
 
@@ -32,11 +33,13 @@ deploy/
 | `lib/signInCode.ts`         | Magic code generation, storage (DynamoDB), and verification                       |
 | `lib/google.ts`             | `openid-client` discovery for Google                                              |
 | `lib/apple.ts`              | `openid-client` discovery for Apple                                               |
+| `lib/i18n.ts`               | Locale registry, `Accept-Language` resolution, `translator`, text direction       |
+| `locales/*.ts`              | Message catalogs; `en.ts` is the source of truth and defines `TranslationKey`     |
 | `adapters/dynamodb.ts`      | `oidc-provider` Adapter interface backed by a single DynamoDB table               |
 | `models/account.ts`         | OIDC Account model — `findByIDP` upserts users, `claims()` emits userinfo         |
 | `routes/oidcInteraction.ts` | Login UI, email code flow, federated callbacks, consent, abort                    |
 | `routes/api.ts`             | Account management API (`POST /api/account/:id/delete`)                           |
-| `views/`                    | HTML templates as EJS strings (login, consent, logout, repost)                    |
+| `views/`                    | HTML templates as EJS strings (login, consent, logout, repost, sign-in email)     |
 | `types/`                    | Shared interfaces: `AppConfig`, `BubblyUserProfile`, `BubblyAdapterPayload`, etc. |
 | `utils/`                    | `sanitiseEmail`, `randomHumanCode`, `getSecret` (Secrets Manager via local proxy) |
 
@@ -63,7 +66,8 @@ API Gateway
 4. `models/` import from `adapters/` and `types/`. They do not import from `lib/` or `routes/`.
 5. `adapters/` import from `types/` only.
 6. `utils/` have no internal imports.
-7. `deploy/` is a completely separate TypeScript project — it does not import from `src/`.
+7. `views/` may import from `lib/i18n.ts` only (and `oidc-provider` types). `lib/i18n.ts` imports from `locales/` only; `locales/` import nothing except `en.ts` types.
+8. `deploy/` is a completely separate TypeScript project — it does not import from `src/`.
 
 ## Decision Tree: Where Does New Code Go?
 
@@ -84,6 +88,13 @@ Does it read/write DynamoDB?
 Is this a new HTTP route or page?
   New login/interaction page → src/routes/oidcInteraction.ts + src/views/
   New account management endpoint → src/routes/api.ts
+
+Is this user-facing text (page copy, button label, email body)?
+  YES → add a key to src/locales/en.ts, add it to every other src/locales/<tag>.ts,
+        and read it with t('key') in the view. Never hard-code English in a view.
+
+Is this a new supported language?
+  YES → see "Key Pattern: Localisation"
 
 Is this a shared TypeScript shape (interface or enum)?
   YES → src/types/
@@ -110,6 +121,42 @@ When a session references an account that has since been deleted, `DynamoDBAdapt
 - **`issueRefreshToken`** — extends refresh-token issuance to public web/native clients without requiring `offline_access`.
 - **`findAccount`** — returns an `Account` instance; claims are fetched lazily in `claims()`.
 - **`interactions`** — every interactive step (login, consent, federated callback) is handled in `src/routes/oidcInteraction.ts`, not inside `oidc-provider` internals.
+
+## Key Pattern: Localisation
+
+Every user-facing screen and the sign-in email are localised. The set of languages is the same as the Bubbly Clouds apps (`bubblyclouds-app`, `LOCALE_TAGS`): English plus 46 translated locales, including `es-MX`, `fr-CA`, `pt-PT`, `zh-Hans`, `zh-Hant` and the right-to-left languages `ar`, `he` and `ur`.
+
+```
+Accept-Language header (the server-side view of navigator.languages)
+  └── resolveLocale()            lib/i18n.ts, same algorithm as the apps' resolveLocale
+        └── locale ('de', 'zh-Hant', ...) — falls back to 'en'
+              ├── translator(locale)('login.enterCode')   catalog lookup, English fallback per key
+              ├── textDirection(locale)                   'rtl' for ar / he / ur
+              └── view(…, locale)                         <html lang dir>, strings, email
+```
+
+- **Detection is per request and server-side.** The login and consent pages and the email are rendered on the server, so the language comes from `Accept-Language` rather than client-side `navigator.language`; there is no flash of English and the email matches the screen the user saw. The route resolves the locale once (`ctx.request.header['accept-language']`) and passes it to the view; `logoutSource` resolves it from its own `ctx`. Nothing is persisted.
+- **Matching.** Exact tag first, then script-aware Chinese (`zh-CN`→`zh-Hans`, `zh-TW`/`HK`/`MO`→`zh-Hant`), language aliases (`no`/`nn`→`nb`, `iw`→`he`, `in`→`id`), then the bare language, then any same-language locale (`pt-BR`→`pt`, `es-AR`→`es`). q-values are honoured; unsupported tags are skipped, not treated as a match for English.
+- **Catalogs.** `src/locales/en.ts` is a flat, dotted-key object (`login.*`, `consent.*`, `logout.*`, `email.*`, `common.*`). Every other locale is `export const messages: Catalog`, so a missing or extra key is a compile error. There are no placeholders today; do not add them without adding interpolation to `translator`.
+- **Brand and shared wording.** "Bubbly Clouds" is never translated. Wording for strings that also exist in the apps (Continue, Cancel, Terms, Privacy, "Sign in with …") is kept identical to `bubblyclouds-app/packages/auth/src/locales/<tag>.json` so both products read the same.
+- **RTL.** Views set `dir` from `textDirection()` and use logical CSS properties (`border-start-start-radius`, etc.) rather than left/right. The one-time code input and the emailed code are forced `dir="ltr"`; the email input is `dir="auto"`.
+- **App names.** The login and consent heading is the OIDC client's `client_name` from AppConfig. `oidc-provider` drops localised metadata (`client_name#de`), and AppConfig is deliberately not used for translations, so `localizeClientName()` maps the known English names ("Sudoku Race", "Unblock Race", matched case-insensitively) to `client.*` catalog keys. The values are the apps' store-listing names (`bubblyclouds-app/scripts/i18n/glossary/<tag>.json`, `<app>.brand.appName`). Any other or renamed client falls back to its configured name. A new app needs a `client.*` key in every catalog and an entry in `CLIENT_NAME_KEYS`.
+- **Not localised (by design).** The `error_description` returned to OIDC clients on abort (a protocol value, not UI), log messages, and `oidc-provider`'s built-in error pages.
+
+### Adding or changing a string
+
+1. Add the key to `src/locales/en.ts`.
+2. Add it to every other `src/locales/<tag>.ts` (the compiler lists the ones you missed).
+3. Use `t('your.key')` in the view; for the email, pass `locale` through `signInEmail*`.
+4. Update tests that assert visible text.
+
+### Adding a locale
+
+1. Create `src/locales/<tag>.ts` exporting `messages: Catalog`, using the tag the apps use.
+2. Import it and add it to `catalogs` in `src/lib/i18n.ts`. If the language is right-to-left, add its primary subtag to `RTL_LANGUAGES`.
+3. Run `npm test`; `src/lib/i18n.test.ts` checks key parity, no empty values, and that every file in `src/locales/` is registered (`resolveLocale(tag) === tag`).
+
+Translations other than English have not had a native-speaker review; see the apps' `scripts/i18n/NATIVE-REVIEW.md` for the process used there.
 
 ## Key Pattern: Configuration via AppConfig
 

@@ -19,6 +19,7 @@ import { SignInCode } from '../lib/signInCode';
 import { FederatedClients } from '../lib/federatedClients';
 import { consent } from '../views/consent';
 import { buildAuthorizationUrl } from 'openid-client';
+import { localizeClientName, resolveLocale } from '../lib/i18n';
 
 export const oidcInteraction = (
   provider: Provider,
@@ -61,6 +62,8 @@ export const oidcInteraction = (
       ctx.req,
       ctx.res
     );
+    // The browser's preferred languages, as sent in Accept-Language
+    const locale = resolveLocale(ctx.request.header['accept-language']);
     const requestQuery: {
       switchUser?: string | string[];
     } = ctx.request.query || {};
@@ -93,9 +96,9 @@ export const oidcInteraction = (
           try {
             const code = await signInCode.getCode(email);
             await ses.sendEmail({
-              html: signInEmailHtml(code),
-              subject: signInEmailSubject,
-              text: signInEmailText(code),
+              html: signInEmailHtml(code, locale),
+              subject: signInEmailSubject(locale),
+              text: signInEmailText(code, locale),
               toEmail: email,
             });
           } catch (e) {
@@ -148,16 +151,18 @@ export const oidcInteraction = (
         );
       }
 
-      return (ctx.response.body = ejs.render(login(email), {
+      return (ctx.response.body = ejs.render(login(email, locale), {
         uid,
         client,
+        clientName: localizeClientName(locale, client?.clientName),
       }));
     } else if (prompt.name === 'consent' && params.client_id) {
       const client = await provider.Client.find(<string>params.client_id);
       // Show view with continue button, Chrome won't redirect otherwise
-      return (ctx.response.body = ejs.render(consent(), {
+      return (ctx.response.body = ejs.render(consent(locale), {
         uid,
         client,
+        clientName: localizeClientName(locale, client?.clientName),
       }));
     }
     return next();
@@ -225,7 +230,8 @@ export const oidcInteraction = (
   router.get('/interaction/callback/google', async (ctx: Context) => {
     // Callback page, will POST results to /interaction/:uid/federated
     const nonce = ctx.state.cspNonce;
-    ctx.response.body = ejs.render(repost(), {
+    const locale = resolveLocale(ctx.request.header['accept-language']);
+    ctx.response.body = ejs.render(repost(undefined, locale), {
       nonce,
       layout: false,
       upstream: IdentityProvider.GOOGLE,
@@ -240,7 +246,8 @@ export const oidcInteraction = (
       throw new errors.InvalidRequest('unexpected request');
     }
     const nonce = ctx.state.cspNonce;
-    ctx.response.body = ejs.render(repost({ state, code }), {
+    const locale = resolveLocale(ctx.request.header['accept-language']);
+    ctx.response.body = ejs.render(repost({ state, code }, locale), {
       nonce,
       layout: false,
       upstream: IdentityProvider.APPLE,

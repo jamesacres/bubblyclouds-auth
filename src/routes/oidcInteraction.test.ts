@@ -230,6 +230,65 @@ describe('GET /interaction/:uid (login prompt)', () => {
     expect(ctx.response.body).toContain('Press continue to return to the app');
   });
 
+  it('renders the login view in the language of the Accept-Language header', async () => {
+    mockInteractionDetails.mockResolvedValue({
+      uid: 'test-uid',
+      params: { client_id: 'web-client' },
+      prompt: { name: 'login' },
+      session: undefined,
+    } as never);
+    mockClientFind.mockResolvedValue({ clientName: 'Test App' } as never);
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: {
+        query: {},
+        body: {},
+        header: { 'accept-language': 'ja-JP,ja;q=0.9,en;q=0.5' },
+      },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(ctx.response.body).toContain('<html lang="ja" dir="ltr">');
+    expect(ctx.response.body).toContain('Googleでログイン');
+  });
+
+  it('shows the localised app name as the heading for a known client', async () => {
+    mockInteractionDetails.mockResolvedValue({
+      uid: 'test-uid',
+      params: { client_id: 'web-client' },
+      prompt: { name: 'login' },
+      session: undefined,
+    } as never);
+    mockClientFind.mockResolvedValue({ clientName: 'Sudoku Race' } as never);
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: { query: {}, body: {}, header: { 'accept-language': 'de' } },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(ctx.response.body).toContain('<h1>Sudoku-Rennen</h1>');
+  });
+
+  it('renders the consent view in the language of the Accept-Language header', async () => {
+    mockInteractionDetails.mockResolvedValue({
+      uid: 'test-uid',
+      params: { client_id: 'web-client' },
+      prompt: { name: 'consent' },
+      session: undefined,
+    } as never);
+    mockClientFind.mockResolvedValue({ clientName: 'Test App' } as never);
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: { query: {}, body: {}, header: { 'accept-language': 'ar' } },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(ctx.response.body).toContain('<html lang="ar" dir="rtl">');
+  });
+
   it('calls next for unknown prompt name', async () => {
     mockInteractionDetails.mockResolvedValue({
       uid: 'test-uid',
@@ -272,6 +331,36 @@ describe('POST /interaction/:uid (email code submission)', () => {
     expect(mockGetCode).toHaveBeenCalledWith('user@example.com');
     expect(mockSendEmail).toHaveBeenCalled();
     expect(ctx.response.body).toContain('Enter code sent via email');
+  });
+
+  it('sends the sign in email in the language of the Accept-Language header', async () => {
+    mockInteractionDetails.mockResolvedValue({
+      uid: 'test-uid',
+      params: { client_id: 'web-client' },
+      prompt: { name: 'login' },
+      session: undefined,
+    } as never);
+    mockClientFind.mockResolvedValue({ clientName: 'Test App' } as never);
+    mockGetCode.mockResolvedValue('XYZ-789' as never);
+    mockSendEmail.mockResolvedValue(undefined as never);
+
+    const ctx = makeCtx({
+      params: { uid: 'test-uid' },
+      request: {
+        query: {},
+        body: { email: 'user@example.com' },
+        header: { 'accept-language': 'de-DE,de;q=0.9' },
+      },
+    });
+    await getHandler()(ctx as never, jest.fn() as never);
+
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: 'Anmeldung bei Bubbly Clouds abschließen',
+        text: expect.stringContaining('Mit diesem Code anmelden'),
+      })
+    );
+    expect(ctx.response.body).toContain('<html lang="de" dir="ltr">');
   });
 
   it('finishes interaction when correct code submitted', async () => {
