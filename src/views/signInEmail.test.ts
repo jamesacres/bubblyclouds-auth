@@ -65,3 +65,19 @@ describe('signInEmail localisation', () => {
     expect(html).not.toContain('Not trying to sign in?');
   });
 });
+
+describe('signInEmail text direction', () => {
+  it('sets direction and alignment on elements that survive client sanitising', () => {
+    const rtl = signInEmailHtml('ABC-DEF-GHI', 'ar');
+    expect(rtl).toContain('<body dir="rtl"');
+    expect(rtl).toContain('<center role="article"');
+    expect(rtl).toMatch(/<div dir="rtl" style="max-width: 600px/);
+    expect(rtl).toMatch(/<td dir="rtl" style="[^"]*text-align: right;/);
+  });
+
+  it('keeps left-to-right alignment for ltr locales', () => {
+    const ltr = signInEmailHtml('ABC-DEF-GHI', 'en');
+    expect(ltr).toMatch(/<td dir="ltr" style="[^"]*text-align: left;/);
+    expect(ltr).not.toContain('dir="rtl"');
+  });
+});
