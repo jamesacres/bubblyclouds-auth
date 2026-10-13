@@ -7,7 +7,7 @@ import {
 
 describe('signInEmail view', () => {
   it('signInEmailSubject is correct', () => {
-    expect(signInEmailSubject).toBe('Finish signing in to Bubbly Clouds');
+    expect(signInEmailSubject()).toBe('Finish signing in to Bubbly Clouds');
   });
 
   it('signInEmailText includes the code', () => {
@@ -48,5 +48,36 @@ describe('signInEmail view', () => {
   it('signInEmailHtml includes footer thanks', () => {
     const html = signInEmailHtml('AAA-000-BBB');
     expect(html).toContain('Thanks, Bubbly Clouds');
+  });
+});
+
+describe('signInEmail localisation', () => {
+  it('localises subject, text and html', () => {
+    expect(signInEmailSubject('fr')).toContain('Bubbly Clouds');
+    expect(signInEmailSubject('fr')).not.toBe(signInEmailSubject('en'));
+    expect(signInEmailText('ABC-DEF-GHI', 'de')).toContain('ABC-DEF-GHI');
+    expect(signInEmailText('ABC-DEF-GHI', 'de')).not.toContain(
+      'Use this code to sign in'
+    );
+    const html = signInEmailHtml('ABC-DEF-GHI', 'he');
+    expect(html).toContain('lang="he" dir="rtl"');
+    expect(html).toContain('<h2 dir="ltr"');
+    expect(html).not.toContain('Not trying to sign in?');
+  });
+});
+
+describe('signInEmail text direction', () => {
+  it('sets direction and alignment on elements that survive client sanitising', () => {
+    const rtl = signInEmailHtml('ABC-DEF-GHI', 'ar');
+    expect(rtl).toContain('<body dir="rtl"');
+    expect(rtl).toContain('<center role="article"');
+    expect(rtl).toMatch(/<div dir="rtl" style="max-width: 600px/);
+    expect(rtl).toMatch(/<td dir="rtl" style="[^"]*text-align: right;/);
+  });
+
+  it('keeps left-to-right alignment for ltr locales', () => {
+    const ltr = signInEmailHtml('ABC-DEF-GHI', 'en');
+    expect(ltr).toMatch(/<td dir="ltr" style="[^"]*text-align: left;/);
+    expect(ltr).not.toContain('dir="rtl"');
   });
 });

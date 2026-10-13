@@ -24,7 +24,7 @@ describe('consent view', () => {
   it('is a valid HTML document', () => {
     const html = consent();
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('<html>');
+    expect(html).toContain('<html lang="en" dir="ltr">');
     expect(html).toContain('</html>');
   });
 

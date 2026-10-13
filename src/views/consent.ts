@@ -1,10 +1,14 @@
-export const consent = () => `<!DOCTYPE html>
-  <html>
+import { DEFAULT_LOCALE, Locale, textDirection, translator } from '../lib/i18n';
+
+export const consent = (locale: Locale = DEFAULT_LOCALE) => {
+  const t = translator(locale);
+  return `<!DOCTYPE html>
+  <html lang="${locale}" dir="${textDirection(locale)}">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
-      <title>Bubbly Clouds Sign in</title>
+      <title>${t('common.signInPageTitle')}</title>
       <style>
         @import url(https://fonts.googleapis.com/css?family=Roboto:400,100);
   
@@ -124,17 +128,18 @@ export const consent = () => `<!DOCTYPE html>
     <body>
       <img src="https://bubblyclouds.com/bubbly-clouds.png" class="logo">
       <div class="login-card">
-        <h1><%= client.clientName %></h1>
-        <p>Press continue to return to the app.</p>
+        <h1><%= clientName %></h1>
+        <p>${t('consent.returnToApp')}</p>
         <form method="post" class="continue-form" action="/oidc/interaction/<%= uid %>/confirm">
-          <button class="continue-button" type="submit">Continue</button>
+          <button class="continue-button" type="submit">${t('common.continue')}</button>
         </form>
         <div class="login-help">
-          <a href="/oidc/interaction/<%= uid %>?switchUser=true">Switch User</a> |
-          <a href="/oidc/interaction/<%= uid %>/abort">Cancel</a><br><br>
-          <a href="https://bubblyclouds.com/terms" target="_blank">Terms of Service</a> | 
-          <a href="https://bubblyclouds.com/privacy" target="_blank">Privacy Policy</a>
+          <a href="/oidc/interaction/<%= uid %>?switchUser=true">${t('consent.switchUser')}</a> |
+          <a href="/oidc/interaction/<%= uid %>/abort">${t('common.cancel')}</a><br><br>
+          <a href="https://bubblyclouds.com/terms" target="_blank">${t('common.termsOfService')}</a> | 
+          <a href="https://bubblyclouds.com/privacy" target="_blank">${t('common.privacyPolicy')}</a>
         </div>
       </div>
     </body>
   </html>`;
+};

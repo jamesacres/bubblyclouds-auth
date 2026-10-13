@@ -1,17 +1,35 @@
-export const signInEmailSubject = 'Finish signing in to Bubbly Clouds';
+import { DEFAULT_LOCALE, Locale, textDirection, translator } from '../lib/i18n';
 
-export const signInEmailText = (code: string) => `Use this code to sign in
+export const signInEmailSubject = (locale: Locale = DEFAULT_LOCALE) =>
+  translator(locale)('email.subject');
+
+export const signInEmailText = (
+  code: string,
+  locale: Locale = DEFAULT_LOCALE
+) => {
+  const t = translator(locale);
+  return `${t('email.heading')}
 
 ${code}
 
-Enter this code to verify your email address and continue signing in.
+${t('email.instruction')}
 
-Not trying to sign in? Please ignore this email.
+${t('email.ignore')}
 
-Thanks, Bubbly Clouds`;
+${t('email.thanks')}`;
+};
 
-export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+export const signInEmailHtml = (
+  code: string,
+  locale: Locale = DEFAULT_LOCALE
+) => {
+  const t = translator(locale);
+  // Many mail clients strip attributes from <html>/<body>, so direction and
+  // alignment are also set explicitly on elements that survive.
+  const dir = textDirection(locale);
+  const align = dir === 'rtl' ? 'right' : 'left';
+  return `<!DOCTYPE html>
+<html lang="${locale}" dir="${dir}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8"> <!-- utf-8 works for most cases -->
     <meta name="viewport" content="width=device-width"> <!-- Forcing initial-scale shouldn't be necessary -->
@@ -235,8 +253,8 @@ export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
 	2. center tag: for Gmail and Inbox mobile apps and web versions of Gmail, GSuite, Inbox, Yahoo, AOL, Libero, Comcast, freenet, Mail.ru, Orange.fr
 	3. mso conditional: For Windows 10 Mail
 -->
-<body width="100%" style="margin: 0; padding: 0 !important; mso-line-height-rule: exactly; background-color: #222222;" class="email-bg">
-	<center role="article" aria-roledescription="email" lang="en" style="width: 100%; background-color: #222222;" class="email-bg">
+<body dir="${dir}" width="100%" style="margin: 0; padding: 0 !important; mso-line-height-rule: exactly; background-color: #222222;" class="email-bg">
+	<center role="article" aria-roledescription="email" lang="${locale}" dir="${dir}" style="width: 100%; background-color: #222222;" class="email-bg">
     <!--[if mso | IE]>
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #222222;" class="email-bg">
     <tr>
@@ -245,7 +263,7 @@ export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
 
         <!-- Visually Hidden Preheader Text : BEGIN -->
         <div style="max-height:0; overflow:hidden; mso-hide:all;" aria-hidden="true">
-            Here is your sign in code
+            ${t('email.preheader')}
         </div>
         <!-- Visually Hidden Preheader Text : END -->
 
@@ -261,7 +279,7 @@ export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
             1. max-width for all clients except Desktop Windows Outlook, allowing the email to squish on narrow but never go wider than 600px.
             2. MSO tags for Desktop Windows Outlook enforce a 600px width.
         -->
-        <div style="max-width: 600px; margin: 0 auto;" class="email-container">
+        <div dir="${dir}" style="max-width: 600px; margin: 0 auto;" class="email-container">
             <!--[if mso]>
             <table align="center" role="presentation" cellspacing="0" cellpadding="0" border="0" width="600">
             <tr>
@@ -273,7 +291,7 @@ export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
 		        <!-- Email Header : BEGIN -->
 	            <tr>
 	                <td style="padding: 20px 0; text-align: center">
-	                    <img src="https://bubblyclouds.com/bubbly-clouds.png" width="200" height="50" alt="alt_text" border="0" style="height: auto; background: #222222; font-family: sans-serif; font-size: 15px; line-height: 15px; color: #555555;">
+	                    <img src="https://bubblyclouds.com/bubbly-clouds.png" width="200" height="50" alt="${t('email.logoAlt')}" border="0" style="height: auto; background: #222222; font-family: sans-serif; font-size: 15px; line-height: 15px; color: #555555;">
 	                </td>
 	            </tr>
 		        <!-- Email Header : END -->
@@ -283,11 +301,11 @@ export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
                     <td style="background-color: #ffffff;" class="darkmode-bg">
                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                             <tr>
-                                <td style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
-                                    <h1 style="margin: 0 0 10px 0; font-family: sans-serif; font-size: 25px; line-height: 30px; color: #333333; font-weight: normal;">Use this code to sign in</h1>
-                                    <h2 style="margin: 24px 0px 24px 0px; font-size: 50px; line-height: 40px;">${code}</h2>
-                                    <p style="margin: 12px 0px 0px 0px;">Enter this code to verify your email address and continue signing in.</p>
-                                    <p style="margin: 12px 0px 0px 0px;">Not trying to sign in? Please ignore this email.</p>
+                                <td dir="${dir}" style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555; text-align: ${align};">
+                                    <h1 style="margin: 0 0 10px 0; font-family: sans-serif; font-size: 25px; line-height: 30px; color: #333333; font-weight: normal;">${t('email.heading')}</h1>
+                                    <h2 dir="ltr" style="margin: 24px 0px 24px 0px; font-size: 50px; line-height: 40px;">${code}</h2>
+                                    <p style="margin: 12px 0px 0px 0px;">${t('email.instruction')}</p>
+                                    <p style="margin: 12px 0px 0px 0px;">${t('email.ignore')}</p>
                                 </td>
                             </tr>
                         </table>
@@ -303,7 +321,7 @@ export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
 	        <table align="center" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: auto;" class="footer">
                 <tr>
                     <td style="padding: 20px; font-family: sans-serif; font-size: 12px; line-height: 15px; text-align: center; color: #ffffff;">
-						Thanks, Bubbly Clouds
+						${t('email.thanks')}
                     </td>
                 </tr>
             </table>
@@ -326,3 +344,4 @@ export const signInEmailHtml = (code: string) => `<!DOCTYPE html>
 </body>
 </html>
 `;
+};

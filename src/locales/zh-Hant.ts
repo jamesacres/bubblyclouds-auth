@@ -1,0 +1,31 @@
+import type { Catalog } from './en';
+
+// Reuses the wording of bubblyclouds-app packages/auth for shared strings.
+export const messages: Catalog = {
+  'common.continue': '繼續',
+  'common.cancel': '取消',
+  'common.termsOfService': '服務條款',
+  'common.privacyPolicy': '隱私權政策',
+  'common.signInPageTitle': 'Bubbly Clouds – 登入',
+  'login.enterCode': '輸入透過電子郵件傳送的驗證碼',
+  'login.notReceived': '沒收到？試試其他方式',
+  'login.signInWithGoogle': '使用 Google 登入',
+  'login.signInWithApple': '使用 Apple 登入',
+  'login.signInWithEmail': '使用電子郵件登入',
+  'login.emailPlaceholder': 'your@email.com',
+  'consent.returnToApp': '點按「繼續」返回 App。',
+  'consent.switchUser': '切換使用者',
+  'logout.pageTitle': 'Bubbly Clouds – 登出',
+  'logout.confirm': '要登出嗎？',
+  'logout.yes': '是，登出',
+  'logout.no': '否，保持登入',
+  'email.subject': '完成登入 Bubbly Clouds',
+  'email.preheader': '這是您的登入驗證碼',
+  'email.logoAlt': 'Bubbly Clouds',
+  'email.heading': '使用此驗證碼登入',
+  'email.instruction': '輸入此驗證碼以驗證您的電子郵件地址並繼續登入。',
+  'email.ignore': '不是您在登入？請忽略此郵件。',
+  'email.thanks': '謝謝，Bubbly Clouds',
+  'client.sudokuRace': '數獨競速',
+  'client.unblockRace': '解鎖競速',
+};

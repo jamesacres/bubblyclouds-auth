@@ -7,4 +7,5 @@ sam-env.json
 .kiro/settings
 .kiro/skills
 .vscode
+.DS_Store
 

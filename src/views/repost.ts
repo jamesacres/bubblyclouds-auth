@@ -1,7 +1,14 @@
-export const repost = (postBody?: { state: string; code: string }) => `<html>
+import { DEFAULT_LOCALE, Locale, textDirection, translator } from '../lib/i18n';
+
+export const repost = (
+  postBody?: { state: string; code: string },
+  locale: Locale = DEFAULT_LOCALE
+) => {
+  const t = translator(locale);
+  return `<html lang="${locale}" dir="${textDirection(locale)}">
 
 <head>
-  <title>Bubbly Clouds Sign in</title>
+  <title>${t('common.signInPageTitle')}</title>
 </head>
 
 <body>
@@ -46,3 +53,4 @@ export const repost = (postBody?: { state: string; code: string }) => `<html>
 </body>
 
 </html>`;
+};

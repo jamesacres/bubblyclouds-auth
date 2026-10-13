@@ -1,13 +1,16 @@
 import { KoaContextWithOIDC } from 'oidc-provider';
+import { resolveLocale, textDirection, translator } from '../lib/i18n';
 
 export const logoutSource = (ctx: KoaContextWithOIDC, form: string) => {
+  const locale = resolveLocale(ctx.request.header['accept-language']);
+  const t = translator(locale);
   ctx.body = `<!DOCTYPE html>
-  <html>
+  <html lang="${locale}" dir="${textDirection(locale)}">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
-      <title>Bubbly Clouds Sign out</title>
+      <title>${t('logout.pageTitle')}</title>
       <style>
         @import url(https://fonts.googleapis.com/css?family=Roboto:400,100);
   
@@ -60,10 +63,10 @@ export const logoutSource = (ctx: KoaContextWithOIDC, form: string) => {
     <body>
     <img src="https://bubblyclouds.com/bubbly-clouds.png" class="logo">
       <div class="login-card">
-        <h1>Do you want to sign-out?</h1>
+        <h1>${t('logout.confirm')}</h1>
         ${form}
-        <button autofocus type="submit" form="op.logoutForm" value="yes" name="logout">Yes, sign me out</button>
-        <button type="submit" form="op.logoutForm">No, stay signed in</button>
+        <button autofocus type="submit" form="op.logoutForm" value="yes" name="logout">${t('logout.yes')}</button>
+        <button type="submit" form="op.logoutForm">${t('logout.no')}</button>
         </div>
       </div>
     </body>

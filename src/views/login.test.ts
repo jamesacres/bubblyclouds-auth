@@ -46,7 +46,27 @@ describe('login view', () => {
   it('is a valid HTML document', () => {
     const html = login();
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('<html>');
+    expect(html).toContain('<html lang="en" dir="ltr">');
     expect(html).toContain('</html>');
+  });
+});
+
+describe('login view localisation', () => {
+  it('renders german strings and lang', () => {
+    const html = login(undefined, 'de');
+    expect(html).toContain('<html lang="de" dir="ltr">');
+    expect(html).toContain('Mit Google anmelden');
+    expect(html).toContain('Mit Apple anmelden');
+    expect(html).not.toContain('Sign in with Google');
+  });
+
+  it('sets rtl direction for arabic', () => {
+    const html = login('user@example.com', 'ar');
+    expect(html).toContain('<html lang="ar" dir="rtl">');
+    expect(html).toContain('dir="ltr" class="email-input"');
+  });
+
+  it('falls back to english for an unknown locale', () => {
+    expect(login(undefined, 'xx')).toContain('Sign in with Google');
   });
 });
